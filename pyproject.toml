@@ -1,0 +1,73 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "mdformat_pandoc"
+version = "0.1.0"
+description = "Mdformat plugin for Pandoc-style fenced divs, tables, and extended syntax."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Antigravity", email = "antigravity@example.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+dependencies = [
+    "mdformat>=0.7.14",
+    "markdown-it-py>=2.0.0",
+    "mdit-py-plugins>=0.3.0",
+    "linkify-it-py>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+    "types-setuptools",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/mdformat-pandoc"
+Repository = "https://github.com/example/mdformat-pandoc"
+Issues = "https://github.com/example/mdformat-pandoc/issues"
+
+[project.entry-points."mdformat.parser_extension"]
+pandoc = "mdformat_pandoc"
+
+[project.entry-points."mdformat.renderer"]
+pandoc = "mdformat_pandoc"
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "N", "UP", "PL", "RUF"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+strict = true
+python_version = "3.9"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+xfail_strict = true
