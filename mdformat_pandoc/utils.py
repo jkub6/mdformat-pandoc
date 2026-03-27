@@ -94,13 +94,8 @@ def format_attributes(attrs: dict[str, str | list[str]]) -> str:
         if key in ("id", "classes"):
             continue
         if isinstance(value, str):
-            # Quote values that contain spaces or special chars
-            if " " in value or '"' in value or "'" in value:
-                # Escape quotes
-                value = value.replace('"', '\\"')
-                parts.append(f'{key}="{value}"')
-            else:
-                parts.append(f'{key}="{value}"')
+            escaped_value = value.replace('"', '\\"')
+            parts.append(f'{key}="{escaped_value}"')
 
     if parts:
         return "{" + " ".join(parts) + "}"

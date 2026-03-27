@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from markdown_it import MarkdownIt
 from markdown_it.rules_block import StateBlock
 from mdformat.renderer import RenderContext, RenderTreeNode
 

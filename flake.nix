@@ -41,8 +41,22 @@
           inherit system;
           overlays = [overlay];
         };
+        python-to-use = pkgs.python3;
       in {
         packages.default = pkgs.python3Packages.mdformat-pandoc;
+
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            just
+            (python-to-use.withPackages (p: [
+              p.mdformat-pandoc
+              p.ruff
+              p.mypy
+              p.pytest
+              p.types-setuptools
+            ]))
+          ];
+        };
       }
     )
     // {
