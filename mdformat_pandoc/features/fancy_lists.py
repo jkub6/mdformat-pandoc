@@ -18,8 +18,8 @@ def parse_fancy_marker(state: StateBlock, start_line: int) -> dict[str, Any] | N
     
     line_text = state.src[pos:max_pos]
     
-    # Regex for various styles: (1), 1., 1)
-    match = re.match(r"^(\((?P<val1>[0-9a-zA-Z]+)\)|(?P<val2>[0-9a-zA-Z]+)(?P<delim>[.)]))(?P<spaces>[ \t]+)", line_text)
+    # Regex for various styles: (1), 1., 1), (#), #., (@label)
+    match = re.match(r"^(\((?P<val1>[#a-zA-Z0-9]+|@[a-zA-Z0-9_\-]*)\)|(?P<val2>[#a-zA-Z0-9]+)(?P<delim>[.)]))(?P<spaces>[ \t]+)", line_text)
     if not match:
         return None
         
@@ -39,7 +39,10 @@ def parse_fancy_marker(state: StateBlock, start_line: int) -> dict[str, Any] | N
     style = "arabic"
     numeric_val = 1
     
-    if val.isdigit():
+    if val.startswith("@") or val == "#":
+        style = "arabic"
+        numeric_val = 1
+    elif val.isdigit():
         style = "arabic"
         numeric_val = int(val)
     elif len(val) == 1 and val.isalpha():
@@ -136,12 +139,6 @@ def fancy_lists_rule(state: StateBlock, start_line: int, end_line: int, silent: 
                     "pandoc_spaces": str(fancy["spaces"]),
                     "pandoc_markup": str(fancy["markup"]),
                 })
-                # Add to attrs too for mdformat compatibility
-                token.attrs = token.attrs or []
-                token.attrs.append(["pandoc_style", str(fancy["style"])])
-                token.attrs.append(["pandoc_delim", str(fancy["delim"])])
-                token.attrs.append(["pandoc_spaces", str(fancy["spaces"])])
-                token.attrs.append(["pandoc_markup", str(fancy["markup"])])
         return token
 
     state.push = patched_push
