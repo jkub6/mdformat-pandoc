@@ -46,20 +46,23 @@ def parse_fancy_marker(state: StateBlock, start_line: int) -> dict[str, Any] | N
         style = "arabic"
         numeric_val = int(val)
     elif len(val) == 1 and val.isalpha():
-        if val.lower() == "i":
+        # Single letters i, v, x, l, c, d, m are roman priority in Pandoc
+        if val.lower() in ("i", "v", "x", "l", "c", "d", "m"):
             style = "roman"
-            numeric_val = 1
+            roman_map = {"i": 1, "v": 5, "x": 10, "l": 50, "c": 100, "d": 500, "m": 1000}
+            numeric_val = roman_map[val.lower()]
         else:
             style = "alpha"
             numeric_val = ord(val.lower()) - ord("a") + 1
     else:
+        # Multi-letter: must be Roman to be a valid Pandoc marker
         roman_re = r"^[ivxlcmIVXLCM]+$"
         if re.match(roman_re, val):
             style = "roman"
-            numeric_val = 1 
+            numeric_val = 1 # Placeholder for multi-letter roman
         else:
-            style = "alpha"
-            numeric_val = 1
+            # Not a valid Pandoc fancy marker (e.g. "mortal")
+            return None
             
     return {
         "style": style,

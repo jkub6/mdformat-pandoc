@@ -55,8 +55,21 @@ def get_attr(node: RenderTreeNode, name: str) -> str | None:
 
 
 def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
-    """Render ordered list. Join items with newlines."""
-    return "\n".join(child.render(context) for child in node.children)
+    """Render ordered list. Join items with newlines (double if loose)."""
+    # Determine if list is loose
+    is_loose = False
+    for item in node.children:
+        for child in item.children:
+            if child.type == "paragraph":
+                token = getattr(child, "token", None)
+                if token and not getattr(token, "hidden", False):
+                    is_loose = True
+                    break
+        if is_loose:
+            break
+            
+    sep = "\n\n" if is_loose else "\n"
+    return sep.join(child.render(context) for child in node.children)
 
 
 def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
@@ -105,7 +118,18 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
         marker = f"{marker_val}."
 
     # 2. Render content
-    content = "".join(child.render(context) for child in node.children).strip()
+    # For loose lists, we don't want to strip the trailing newlines from block children
+    is_loose = False
+    for child in node.children:
+        if child.type == "paragraph":
+            token = getattr(child, "token", None)
+            if token and not getattr(token, "hidden", False):
+                is_loose = True
+                break
+            
+    content = "".join(child.render(context) for child in node.children)
+    if not is_loose:
+        content = content.strip()
 
     # 3. Handle spacing and indentation
     actual_spaces = " " * spaces_count
