@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable
 
-from mdformat.renderer.typing import Render
+if TYPE_CHECKING:
+    from mdformat.renderer import RenderContext, RenderTreeNode
+
+    Render = Callable[[RenderTreeNode, RenderContext], str]
+else:
+    Render = Any
 
 from mdformat_pandoc.features.divs import render_pandoc_div
 from mdformat_pandoc.features.footnotes import (
@@ -17,6 +21,8 @@ from mdformat_pandoc.features.lists import (
     render_dd_open,
     render_dl_open,
     render_dt_open,
+    render_list_item,
+    render_ordered_list,
 )
 from mdformat_pandoc.features.math import (
     render_math_block,
@@ -25,13 +31,8 @@ from mdformat_pandoc.features.math import (
 from mdformat_pandoc.features.tables import render_cell, render_table
 from mdformat_pandoc.utils import PANDOC_DIV
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-
-    from mdformat.renderer.typing import Render
-
-# Renderer mapping for mdformat
-RENDERERS: Mapping[str, Render] = {
+# Renderer mapping for mdformat - use dict for .update() support
+RENDERERS: dict[str, Render] = {
     PANDOC_DIV: render_pandoc_div,
     "front_matter": render_front_matter,
     "footnote_ref": render_footnote_ref,
@@ -41,12 +42,11 @@ RENDERERS: Mapping[str, Render] = {
     "dl": render_dl_open,
     "dt": render_dt_open,
     "dd": render_dd_open,
+    "ordered_list": render_ordered_list,
+    "list_item": render_list_item,
     "math_inline": render_math_inline,
     "math_block": render_math_block,
     "table": render_table,
     "th": render_cell,
     "td": render_cell,
-    # Note: Header attributes and generic attributes are currently handled
-    # as plain text by the default renderer, which preserves them perfectly
-    # for Pandoc compatibility without risking data loss during parsing.
 }

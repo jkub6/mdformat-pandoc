@@ -57,9 +57,7 @@ def parse_attributes(attr_string: str) -> dict[str, str | list[str]]:
     result["classes"] = classes
 
     # Key-value pairs: key="value" or key='value' or key=value
-    for match in re.finditer(
-        r"([\w-]+)=(?:\"([^\"]*)\"|'([^']*)'|([\w-]+))", attr_string
-    ):
+    for match in re.finditer(r"([\w-]+)=(?:\"([^\"]*)\"|'([^']*)'|([\w-]+))", attr_string):
         key = match.group(1)
         # Get whichever group matched
         value = match.group(2) or match.group(3) or match.group(4) or ""

@@ -10,29 +10,31 @@ from mdformat_pandoc.utils import PANDOC_DIV, format_attributes, parse_attribute
 if TYPE_CHECKING:
     from mdformat.renderer import RenderContext, RenderTreeNode
 
+__all__ = ["PANDOC_DIV", "pandoc_div_plugin", "render_pandoc_div"]
+
+# Standard markdown block indent limit
+INDENT_LIMIT = 4
+
 
 def _is_code_block(state: StateBlock, line: int) -> bool:
     """Check if line is inside a code block."""
-    return state.sCount[line] - state.blkIndent >= 4
+    return int(state.sCount[line]) - state.blkIndent >= INDENT_LIMIT
 
 
-def pandoc_div_plugin(
-    state: StateBlock, start_line: int, end_line: int, silent: bool
-) -> bool:
-    """Parse pandoc fenced divs.
+def _is_fence_start(state: StateBlock, start_line: int) -> tuple[int, int] | None:
+    """Check if a line starts a fenced div.
 
-    A fenced div starts with 3+ colons followed by attributes.
-    It ends with 3+ colons (no attributes).
+    Returns (colon_count, pos_after_colons) if it does, else None.
     """
     if _is_code_block(state, start_line):
-        return False
+        return None
 
     start = state.bMarks[start_line] + state.tShift[start_line]
     maximum = state.eMarks[start_line]
 
     # Must start with :
     if state.src[start] != ":":
-        return False
+        return None
 
     # Count colons
     pos = start
@@ -40,47 +42,27 @@ def pandoc_div_plugin(
         pos += 1
 
     colon_count = pos - start
-    if colon_count < 3:
-        return False
+    min_fence_colons = 3
+    if colon_count < min_fence_colons:
+        return None
 
-    # Get the rest of the line (attributes)
-    rest = state.src[pos:maximum].strip()
+    return colon_count, pos
 
-    # Opening fence must have attributes
-    if not rest:
-        return False
 
-    # Parse attributes
-    attrs = parse_attributes(rest)
-
-    # Must have at least an id or class or other attribute
-    if not attrs.get("id") and not attrs.get("classes"):
-        # Check if there are any other keys
-        other_keys = [k for k in attrs if k not in ("id", "classes")]
-        if not other_keys:
-            return False
-
-    # In silent mode, just validate
-    if silent:
-        return True
-
-    # Find closing fence
+def _find_closing_fence(state: StateBlock, start_line: int, end_line: int, min_colons: int) -> int:
+    """Find the line containing the closing fence."""
     next_line = start_line + 1
     nesting = 1
 
     while next_line < end_line:
-        if state.sCount[next_line] - state.blkIndent >= 4:
+        if _is_code_block(state, next_line):
             next_line += 1
             continue
 
         line_start = state.bMarks[next_line] + state.tShift[next_line]
         line_end = state.eMarks[next_line]
 
-        if line_start >= line_end:
-            next_line += 1
-            continue
-
-        if state.src[line_start] != ":":
+        if line_start >= line_end or state.src[line_start] != ":":
             next_line += 1
             continue
 
@@ -90,7 +72,7 @@ def pandoc_div_plugin(
             line_pos += 1
 
         line_colon_count = line_pos - line_start
-        if line_colon_count < 3:
+        if line_colon_count < min_colons:
             next_line += 1
             continue
 
@@ -99,19 +81,52 @@ def pandoc_div_plugin(
         # If has attributes, it's a nested opening
         if line_rest:
             nested_attrs = parse_attributes(line_rest)
+            max_div_attrs = 2
             if (
                 nested_attrs.get("id")
                 or nested_attrs.get("classes")
-                or len(nested_attrs) > 2
+                or len(nested_attrs) > max_div_attrs
             ):
                 nesting += 1
         else:
             # Closing fence (no attributes)
             nesting -= 1
             if nesting == 0:
-                break
+                return next_line
 
         next_line += 1
+
+    return next_line
+
+
+def pandoc_div_plugin(state: StateBlock, start_line: int, end_line: int, silent: bool) -> bool:
+    """Parse pandoc fenced divs."""
+    fence_info = _is_fence_start(state, start_line)
+    if not fence_info:
+        return False
+
+    colon_count, pos = fence_info
+    maximum = state.eMarks[start_line]
+    rest = state.src[pos:maximum].strip()
+
+    # Opening fence must have attributes
+    if not rest:
+        return False
+
+    # Parse and validate attributes
+    attrs = parse_attributes(rest)
+    if not attrs.get("id") and not attrs.get("classes"):
+        other_keys = [k for k in attrs if k not in ("id", "classes")]
+        if not other_keys:
+            return False
+
+    # In silent mode, just validate
+    if silent:
+        return True
+
+    # Find closing fence
+    min_div_colons = 3
+    next_line = _find_closing_fence(state, start_line, end_line, min_div_colons)
 
     # Store old state
     old_parent = state.parentType
@@ -124,7 +139,7 @@ def pandoc_div_plugin(
     token = state.push(f"{PANDOC_DIV}_open", "div", 1)
     token.markup = ":" * colon_count
     token.block = True
-    token.info = rest  # Store original attribute string
+    token.info = rest
     token.meta = {"attrs": attrs, "colon_count": colon_count}
     token.map = [start_line, next_line + 1]
 
@@ -144,11 +159,7 @@ def pandoc_div_plugin(
 
 
 def _count_nested_divs(node: RenderTreeNode) -> int:
-    """Count maximum nesting depth within this node's subtree.
-
-    For outer-longer convention: outer divs need more colons than inner divs.
-    Returns the max depth of nested pandoc_div children.
-    """
+    """Count maximum nesting depth within this node's subtree."""
     max_depth = 0
     for child in node.children:
         if child.type == PANDOC_DIV:
@@ -161,35 +172,18 @@ def _count_nested_divs(node: RenderTreeNode) -> int:
 
 
 def render_pandoc_div(node: RenderTreeNode, context: RenderContext) -> str:
-    """Render a pandoc div fence with content.
-
-    Uses professional format with single blank lines for visual separation:
-    - Blank line after opening fence (separates attributes from content)
-    - Blank line before closing fence (provides visual closure)
-    - Children separated by blank lines (required for block elements like lists)
-    """
-    # Get attributes from the opening token's info field
+    """Render a pandoc div fence with content."""
     attrs = parse_attributes(node.info) if node.info else {"id": "", "classes": []}
-
-    # Format attributes
     attr_str = format_attributes(attrs)
 
-    # Calculate colon count based on nesting (outer-longer convention)
-    # Outer divs get more colons than inner divs
     inner_depth = _count_nested_divs(node)
-    colon_count = 3 + inner_depth
+    min_fixed_colons = 3
+    colon_count = min_fixed_colons + inner_depth
 
-    # Render children with proper block-level spacing
-    # Double newlines between children preserves mdformat's block element handling
-    child_outputs = []
-    for child in node.children:
-        rendered = child.render(context)
-        if rendered:
-            child_outputs.append(rendered)
-
+    child_outputs = [child.render(context) for child in node.children]
+    child_outputs = [c for c in child_outputs if c]
     children_text = "\n\n".join(child_outputs)
 
-    # Build the div with professional formatting
     opening = ":" * colon_count + " " + attr_str
     closing = ":" * colon_count
 

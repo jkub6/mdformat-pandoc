@@ -1,6 +1,13 @@
-from typing import List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Callable
 
 from mdformat.renderer import RenderContext, RenderTreeNode
+
+if TYPE_CHECKING:
+    Render = Callable[[RenderTreeNode, RenderContext], str]
+else:
+    Render = Any
 
 
 def _get_cell_alignment(node: RenderTreeNode) -> str:
@@ -8,7 +15,9 @@ def _get_cell_alignment(node: RenderTreeNode) -> str:
 
     Returns 'left', 'right', 'center', or ''.
     """
-    style = node.attrs.get("style", "")
+    style_attr = node.attrs.get("style", "")
+    style = str(style_attr) if style_attr is not None else ""
+
     if "text-align:center" in style:
         return "center"
     if "text-align:right" in style:
@@ -25,73 +34,61 @@ def render_cell(node: RenderTreeNode, context: RenderContext) -> str:
     """
     # Simply render children. mdformat's default traversal logic isn't easily accessible
     # as a single function, but usually we iterate children.
-    # We use empty string as separator for inline content?
-    # Or usually mdformat handles spacing.
-    # For inline content, usually we just join.
     return "".join(child.render(context) for child in node.children)
 
 
 def _render_cell_content(node: RenderTreeNode, context: RenderContext) -> str:
     """Render the content of a cell (th/td)."""
     # We want to render the inline content of the cell.
-    # We rely on mdformat's default behavior for children of th/td
-    # which effectively renders the inline nodes.
-    # Note: If th/td has block children, pipe tables might break.
-    # Pandoc pipe tables usually expect inline content.
     return node.render(context).strip()
 
 
-def render_table(node: RenderTreeNode, context: RenderContext) -> str:
-    """Render a Pipe Table."""
+def _extract_table_data(
+    node: RenderTreeNode, context: RenderContext
+) -> tuple[list[str], list[str], list[list[str]]]:
+    """Extract headers, alignments, and rows from table node."""
+    headers: list[str] = []
+    alignments: list[str] = []
+    rows: list[list[str]] = []
 
-    # 1. Extract Data
-    headers: List[str] = []
-    alignments: List[str] = []
-    rows: List[List[str]] = []
-
-    thead = None
-    tbody = None
-
-    for child in node.children:
-        if child.type == "thead":
-            thead = child
-        elif child.type == "tbody":
-            tbody = child
+    thead = next((c for c in node.children if c.type == "thead"), None)
+    tbody = next((c for c in node.children if c.type == "tbody"), None)
 
     # Process Header
     if thead:
-        for tr in thead.children:
-            if tr.type == "tr":
-                for th in tr.children:
-                    if th.type in ("th", "td"):
-                        headers.append(_render_cell_content(th, context))
-                        alignments.append(_get_cell_alignment(th))
+        for tr in (c for c in thead.children if c.type == "tr"):
+            for th in (c for c in tr.children if c.type in ("th", "td")):
+                headers.append(_render_cell_content(th, context))
+                alignments.append(_get_cell_alignment(th))
 
     # Process Body
     if tbody:
-        for tr in tbody.children:
-            if tr.type == "tr":
-                row_data = []
-                for td in tr.children:
-                    if td.type in ("td", "th"):
-                        row_data.append(_render_cell_content(td, context))
-                rows.append(row_data)
+        for tr in (c for c in tbody.children if c.type == "tr"):
+            row_data = [
+                _render_cell_content(td, context) for td in tr.children if td.type in ("td", "th")
+            ]
+            rows.append(row_data)
 
-    if not headers and not rows:
-        return ""
+    return headers, alignments, rows
 
-    # 2. Normalize Data
-    num_columns = len(headers)
-    if not num_columns and rows:
-        num_columns = len(rows[0])
-        # If no header, make empty headers? Pandoc pipe tables usually require headers or start with |
-        # But valid pipe table must have a header line in most specs (including GFM).
-        # Pandoc extensions might allow headerless, but let's assume we need one or at least the separator.
-        headers = [""] * num_columns
-        alignments = [""] * num_columns
 
-    # 3. Calculate Column Widths
-    # Minimum width is 3 (for '---') or length of content
+def _render_table_row(row: list[str], col_widths: list[int]) -> str:
+    """Render a single table row."""
+    row_line = "|"
+    num_cols = len(col_widths)
+    num_row_cells = len(row)
+
+    for i in range(num_cols):
+        c_text = row[i] if i < num_row_cells else ""
+        c_width = col_widths[i]
+        row_line += f" {c_text.ljust(c_width)} |"
+    return row_line
+
+
+def _calculate_col_widths(
+    headers: list[str], rows: list[list[str]], alignments: list[str]
+) -> list[int]:
+    """Calculate and normalize column widths."""
     col_widths = [len(h) for h in headers]
 
     for row in rows:
@@ -107,54 +104,55 @@ def render_table(node: RenderTreeNode, context: RenderContext) -> str:
                     alignments.append("")
 
     # Ensure min width of 3 for delimiter generation
-    # Actually markdown-it-py alignment is ':-:', '---', '-:' (3 chars min)
-    col_widths = [max(w, 3) for w in col_widths]
+    min_delim_width = 3
+    return [max(w, min_delim_width) for w in col_widths]
+
+
+def _render_delimiter(align: str, width: int) -> str:
+    """Render a table delimiter cell."""
+    if align == "center":
+        # :---:
+        return ":" + "-" * (width - 2) + ":"
+    if align == "right":
+        # ---:
+        return "-" * (width - 1) + ":"
+    if align == "left":
+        # :---
+        return ":" + "-" * (width - 1)
+    # ---
+    return "-" * width
+
+
+def render_table(node: RenderTreeNode, context: RenderContext) -> str:
+    """Render a Pipe Table."""
+
+    # 1. Extract Data
+    headers, alignments, rows = _extract_table_data(node, context)
+
+    if not headers and not rows:
+        return ""
+
+    # 2. Normalize Data if headerless
+    if not headers and rows:
+        num_columns = len(rows[0])
+        headers = [""] * num_columns
+        alignments = [""] * num_columns
+
+    # 3. Calculate Column Widths
+    col_widths = _calculate_col_widths(headers, rows, alignments)
 
     # 4. Generate Output
     lines = []
 
     # Header Row
-    header_line = "|"
-    for i, h in enumerate(headers):
-        header_line += f" {h.ljust(col_widths[i])} |"
-    lines.append(header_line)
+    lines.append(_render_table_row(headers, col_widths))
 
     # Delimiter Row
-    delim_line = "|"
-    for i, align in enumerate(alignments):
-        width = col_widths[i]
-        if align == "center":
-            # :---:
-            delim = ":" + "-" * (width - 2) + ":"
-        elif align == "right":
-            # ---:
-            delim = "-" * (width - 1) + ":"
-        elif align == "left":
-            # :---
-            delim = ":" + "-" * (width - 1)
-        else:
-            # ---
-            delim = "-" * width
-
-        delim_line += f" {delim} |"
-    lines.append(delim_line)
+    delim_cells = [_render_delimiter(align, col_widths[i]) for i, align in enumerate(alignments)]
+    lines.append("| " + " | ".join(delim_cells) + " |")
 
     # Body Rows
     for row in rows:
-        row_line = "|"
-        for i, cell in enumerate(row):
-            # Handle cells missing at end of row
-            c_text = cell if i < len(row) else ""
-            c_width = col_widths[i]
-            row_line += f" {c_text.ljust(c_width)} |"
-
-        # Fill missing columns in the row string
-        remaining_cols = len(col_widths) - len(row)
-        for i in range(remaining_cols):
-            idx = len(row) + i
-            c_width = col_widths[idx]
-            row_line += f" {''.ljust(c_width)} |"
-
-        lines.append(row_line)
+        lines.append(_render_table_row(row, col_widths))
 
     return "\n".join(lines)

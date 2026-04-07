@@ -37,7 +37,7 @@ lint: check
 [group('Quality')]
 [doc('Run all tests')]
 test:
-  pytest
+  PYTHONPATH=. pytest
 
 [group('Quality')]
 [doc('Run full CI pipeline: check, test')]

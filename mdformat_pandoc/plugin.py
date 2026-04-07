@@ -7,6 +7,7 @@ from mdit_py_plugins.front_matter import front_matter_plugin
 # We will need to verify if tables plugin exists or is default
 # markdown-it-py supports GFM tables by default if enabled
 from mdformat_pandoc.features.divs import PANDOC_DIV, pandoc_div_plugin
+from mdformat_pandoc.features.fancy_lists import fancy_lists_plugin
 
 
 def update_mdit(mdit: MarkdownIt) -> None:
@@ -17,13 +18,16 @@ def update_mdit(mdit: MarkdownIt) -> None:
 
     # Custom plugins
     mdit.block.ruler.before("fence", PANDOC_DIV, pandoc_div_plugin)
+    mdit.use(fancy_lists_plugin)
 
     # External plugins matching Pandoc syntax
     mdit.use(footnote_plugin)
     mdit.use(deflist_plugin)
     mdit.use(front_matter_plugin)
-    # mdit-py-plugins.tasklists renders html <input> tags effectively suitable for viewing but not formatting
-    # We prefer keeping them as text '[ ]' which standard mdit parser handles fine as plain content.
+    # mdit-py-plugins.tasklists renders html <input> tags effectively suitable
+    # for viewing but not formatting.
+    # We prefer keeping them as text '[ ]' which standard mdit parser handles
+    # fine as plain content.
     # mdit.use(tasklists_plugin)
 
     # Pandoc supports both $..$ and $$..$$ (dollarmath) and generic tex math
