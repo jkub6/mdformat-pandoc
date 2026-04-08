@@ -1,4 +1,3 @@
-import importlib
 import sys
 from unittest.mock import patch
 
@@ -6,16 +5,16 @@ from unittest.mock import patch
 def pytest_configure(config):
     """Ensure the local mdformat-pandoc plugin is registered in mdformat."""
     import mdformat.plugins
+
     import mdformat_pandoc
 
     # ALWAYS inject our local plugin into mdformat's parser extension registry.
     # This ensures that even if a version is installed in the environment (e.g. Nix store),
     # we use the local code under test.
     print("DEBUG: Force injecting local pandoc plugin into mdformat.plugins", file=sys.stderr)
-    
+
     # Pre-emptively patch entry_points before mdformat.plugins uses it
-    import importlib.metadata
-    
+
     class MockDist:
         def __init__(self):
             self.version = "0.1.0"
@@ -28,6 +27,7 @@ def pytest_configure(config):
             self.value = value
             self.group = group
             self.dist = MockDist()
+
         def load(self):
             return mdformat_pandoc
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 import textwrap
 from typing import TYPE_CHECKING
 
@@ -41,7 +40,7 @@ def get_attr(node: RenderTreeNode, name: str) -> str | None:
     if meta := getattr(node, "meta", {}):
         if val := meta.get(name):
             return str(val)
-            
+
     # Then try attrs
     attrs = getattr(node, "attrs", {})
     if isinstance(attrs, dict):
@@ -67,7 +66,7 @@ def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
                     break
         if is_loose:
             break
-            
+
     sep = "\n\n" if is_loose else "\n"
     return sep.join(child.render(context) for child in node.children)
 
@@ -89,9 +88,9 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
 
     # 2. Determine the marker string
     parent = node.parent
-    
+
     # Handle bullet lists (standard markdown)
-    # The default mdformat bullet_list renderer adds the marker, 
+    # The default mdformat bullet_list renderer adds the marker,
     # so we only return the content.
     if parent and parent.type == "bullet_list":
         return content
@@ -154,7 +153,7 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
     lines = content.splitlines(keepends=True)
     if not lines:
         return prefix
-        
+
     first_line = lines[0]
     rest = "".join(lines[1:])
     return prefix + first_line + textwrap.indent(rest, " " * len(prefix))
