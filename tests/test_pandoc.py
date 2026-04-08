@@ -13,6 +13,7 @@ TEST_CASES = [
     ("Superscript", "test ^super^ here\n", "test ^super^ here\n"),
     ("Footnote Block", "test[^1]\n\n[^1]: \n    note\n", "test[^1]\n\n[^1]: \n    note\n"),
     ("Inline Footnote", "test ^[inline footnote]\n", "test ^[inline footnote]\n"),
+    ("Bullet List", "- a\n- b\n", "- a\n- b\n"),
 ]
 
 

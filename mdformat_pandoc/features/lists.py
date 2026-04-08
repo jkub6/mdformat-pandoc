@@ -74,17 +74,36 @@ def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
 
 def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
     """Render list item, preserving Pandoc fancy markers and spacing."""
-    # 1. Determine the marker string
+    # 1. Render content first to handle loose lists and scoping
+    is_loose = False
+    for child in node.children:
+        if child.type == "paragraph":
+            token = getattr(child, "token", None)
+            if token and not getattr(token, "hidden", False):
+                is_loose = True
+                break
+
+    content = "".join(child.render(context) for child in node.children)
+    if not is_loose:
+        content = content.strip()
+
+    # 2. Determine the marker string
+    parent = node.parent
+    
+    # Handle bullet lists (standard markdown)
+    # The default mdformat bullet_list renderer adds the marker, 
+    # so we only return the content.
+    if parent and parent.type == "bullet_list":
+        return content
+
+    # Handle ordered lists (including fancy Pandoc ones)
     style = get_attr(node, "pandoc_style") or "arabic"
     delim = get_attr(node, "pandoc_delim") or "period"
     pandoc_spaces = get_attr(node, "pandoc_spaces")
-    # Pandoc fancy lists need at least 2 spaces to be recognized as lists 
-    # if they are Alpha or Roman.
-    spaces_count = int(pandoc_spaces) if pandoc_spaces else 2
+    actual_spaces_count = int(pandoc_spaces) if pandoc_spaces else 2
     pandoc_markup = get_attr(node, "pandoc_markup")
 
     index = 0
-    parent = node.parent
     if parent:
         list_items = [c for c in parent.children if c.type == "list_item"]
         if node in list_items:
@@ -98,6 +117,15 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
         current_val = 1
 
     # Format the value based on style
+    if style == "example":
+        prefix = (pandoc_markup or node.markup) + (" " * actual_spaces_count)
+        if not content:
+            return prefix
+        lines = content.splitlines(keepends=True)
+        first_line = lines[0]
+        rest = "".join(lines[1:])
+        return prefix + first_line + textwrap.indent(rest, " " * len(prefix))
+
     if style == "roman":
         markup = pandoc_markup or node.markup
         is_lower = not any(c.isupper() for c in markup) if markup else True
@@ -117,30 +145,8 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
     else:  # period
         marker = f"{marker_val}."
 
-    # 2. Render content
-    # For loose lists, we don't want to strip the trailing newlines from block children
-    is_loose = False
-    for child in node.children:
-        if child.type == "paragraph":
-            token = getattr(child, "token", None)
-            if token and not getattr(token, "hidden", False):
-                is_loose = True
-                break
-
-    content = "".join(child.render(context) for child in node.children)
-    if not is_loose:
-        content = content.strip()
-
-    # 3. Handle spacing and indentation
-    actual_spaces = " " * spaces_count
+    actual_spaces = " " * actual_spaces_count
     prefix = marker + actual_spaces
-
-    if style == "example":
-        # Example lists: (@label) - we prefer keeping the original markup if possible
-        # but Pandoc actually only uses the markup for the first item 
-        # or if it has a label.
-        prefix = (pandoc_markup or node.markup) + actual_spaces
-        return prefix + content
 
     if not content:
         return prefix
