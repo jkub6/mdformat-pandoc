@@ -126,7 +126,7 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
             if token and not getattr(token, "hidden", False):
                 is_loose = True
                 break
-            
+
     content = "".join(child.render(context) for child in node.children)
     if not is_loose:
         content = content.strip()
@@ -134,6 +134,13 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
     # 3. Handle spacing and indentation
     actual_spaces = " " * spaces_count
     prefix = marker + actual_spaces
+
+    if style == "example":
+        # Example lists: (@label) - we prefer keeping the original markup if possible
+        # but Pandoc actually only uses the markup for the first item 
+        # or if it has a label.
+        prefix = (pandoc_markup or node.markup) + actual_spaces
+        return prefix + content
 
     if not content:
         return prefix

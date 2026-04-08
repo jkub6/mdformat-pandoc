@@ -39,18 +39,21 @@ def parse_fancy_marker(state: StateBlock, start_line: int) -> dict[str, Any] | N
     style = "arabic"
     numeric_val = 1
     
-    if val.startswith("@") or val == "#":
+    if val.startswith("@"):
+        style = "example"
+        numeric_val = 1
+    elif val == "#":
         style = "arabic"
         numeric_val = 1
     elif val.isdigit():
         style = "arabic"
         numeric_val = int(val)
     elif len(val) == 1 and val.isalpha():
-        # Single letters i, v, x, l, c, d, m are roman priority in Pandoc
-        if val.lower() in ("i", "v", "x", "l", "c", "d", "m"):
+        # To avoid ambiguity, Pandoc treats single letters as alpha 
+        # unless it is 'i' or 'I'.
+        if val.lower() == "i":
             style = "roman"
-            roman_map = {"i": 1, "v": 5, "x": 10, "l": 50, "c": 100, "d": 500, "m": 1000}
-            numeric_val = roman_map[val.lower()]
+            numeric_val = 1
         else:
             style = "alpha"
             numeric_val = ord(val.lower()) - ord("a") + 1

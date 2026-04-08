@@ -28,6 +28,7 @@ from mdformat_pandoc.features.math import (
     render_math_block,
     render_math_inline,
 )
+from mdformat_pandoc.features.sub_sup import render_sub, render_sup
 from mdformat_pandoc.features.tables import render_cell, render_table
 from mdformat_pandoc.utils import PANDOC_DIV
 
@@ -49,4 +50,6 @@ RENDERERS: dict[str, Render] = {
     "table": render_table,
     "th": render_cell,
     "td": render_cell,
+    "sub": render_sub,
+    "sup": render_sup,
 }
