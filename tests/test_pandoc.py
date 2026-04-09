@@ -14,6 +14,10 @@ TEST_CASES = [
     ("Footnote Block", "test[^1]\n\n[^1]: \n    note\n", "test[^1]\n\n[^1]: \n    note\n"),
     ("Inline Footnote", "test ^[inline footnote]\n", "test ^[inline footnote]\n"),
     ("Bullet List", "- a\n- b\n", "- a\n- b\n"),
+    ("Subscript with Space", "test ~sub\\ script~ here\n", "test ~sub\\ script~ here\n"),
+    ("Superscript with Space", "test ^super\\ script^ here\n", "test ^super\\ script^ here\n"),
+    ("Nested Sub/Sup", "test ~sub^sup^~ here\n", "test ~sub^sup^~ here\n"),
+    ("Mixed Subscript", "test ~*bold\\ sub*~ here\n", "test ~*bold\\ sub*~ here\n"),
 ]
 
 
