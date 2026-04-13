@@ -53,6 +53,11 @@ def parse_fancy_marker(state: StateBlock, start_line: int) -> dict[str, Any] | N
     elif len(val) == 1 and val.isalpha():
         # To avoid ambiguity, Pandoc treats single letters as alpha
         # unless it is 'i' or 'I'.
+
+        # Single uppercase letter followed by a period requires at least two spaces
+        if val.isupper() and delim == "period" and spaces < 2:
+            return None
+
         if val.lower() == "i":
             style = "roman"
             numeric_val = 1

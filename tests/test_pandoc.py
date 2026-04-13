@@ -21,6 +21,9 @@ TEST_CASES = [
     ("Custom Label List", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n"),
     ("Custom Label with ID", "{::P(#p1)} All humans are mortal.\n", "{::P(#p1)} All humans are mortal.\n"),
     ("Tight List Validation", "1. a\n2. b\n", "1. a\n2. b\n"),
+    ("List Marker initials", "- N. T. Wright\n", "- N. T. Wright\n"),
+    ("Fancy List uppercase period 2 spaces", "A.  Item\n", "A.  Item\n"),
+    ("Fancy List uppercase paren 1 space", "A) Item\n", "A) Item\n"),
 ]
 
 
