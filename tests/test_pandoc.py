@@ -24,6 +24,7 @@ TEST_CASES = [
     ("List Marker initials", "- N. T. Wright\n", "- N. T. Wright\n"),
     ("Fancy List uppercase period 2 spaces", "A.  Item\n", "A.  Item\n"),
     ("Fancy List uppercase paren 1 space", "A) Item\n", "A) Item\n"),
+    ("List Item Block Joining", "1. Para:\n   ```\n   code\n   ```\n", "1. Para:\n   ```\n   code\n   ```\n"),
 ]
 
 

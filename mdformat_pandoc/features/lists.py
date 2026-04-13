@@ -82,7 +82,8 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
                 is_loose = True
                 break
 
-    content = "".join(child.render(context) for child in node.children)
+    sep = "\n\n" if is_loose else "\n"
+    content = sep.join(child.render(context) for child in node.children)
     if not is_loose:
         content = content.strip()
 
