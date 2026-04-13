@@ -18,6 +18,8 @@ TEST_CASES = [
     ("Superscript with Space", "test ^super\\ script^ here\n", "test ^super\\ script^ here\n"),
     ("Nested Sub/Sup", "test ~sub^sup^~ here\n", "test ~sub^sup^~ here\n"),
     ("Mixed Subscript", "test ~*bold\\ sub*~ here\n", "test ~*bold\\ sub*~ here\n"),
+    ("Custom Label List", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n"),
+    ("Custom Label with ID", "{::P(#p1)} All humans are mortal.\n", "{::P(#p1)} All humans are mortal.\n"),
 ]
 
 

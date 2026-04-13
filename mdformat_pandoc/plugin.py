@@ -8,6 +8,7 @@ from mdit_py_plugins.front_matter import front_matter_plugin
 
 from mdformat_pandoc.features.divs import PANDOC_DIV, pandoc_div_plugin
 from mdformat_pandoc.features.fancy_lists import fancy_lists_plugin
+from mdformat_pandoc.features.custom_labels import custom_label_plugin
 from mdformat_pandoc.features.sub_sup import subscript_plugin, superscript_plugin
 
 
@@ -27,6 +28,7 @@ def update_mdit(mdit: MarkdownIt) -> None:
     mdit.use(deflist_plugin)
     mdit.use(front_matter_plugin)
     mdit.use(subscript_plugin)
+    mdit.use(custom_label_plugin)
     # mdit-py-plugins.tasklists renders html <input> tags effectively suitable
     # for viewing but not formatting.
     # We prefer keeping them as text '[ ]' which standard mdit parser handles

@@ -24,6 +24,7 @@ from mdformat_pandoc.features.lists import (
     render_list_item,
     render_ordered_list,
 )
+from mdformat_pandoc.features import custom_labels
 from mdformat_pandoc.features.math import (
     render_math_block,
     render_math_inline,
@@ -52,4 +53,6 @@ RENDERERS: dict[str, Render] = {
     "td": render_cell,
     "sub": render_sub,
     "sup": render_sup,
+    "custom_label_list": custom_labels.render_custom_label_list,
+    "custom_label_item": custom_labels.render_custom_label_item,
 }
