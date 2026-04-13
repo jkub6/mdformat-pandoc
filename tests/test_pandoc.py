@@ -20,6 +20,7 @@ TEST_CASES = [
     ("Mixed Subscript", "test ~*bold\\ sub*~ here\n", "test ~*bold\\ sub*~ here\n"),
     ("Custom Label List", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n"),
     ("Custom Label with ID", "{::P(#p1)} All humans are mortal.\n", "{::P(#p1)} All humans are mortal.\n"),
+    ("Tight List Validation", "1. a\n2. b\n", "1. a\n2. b\n"),
 ]
 
 

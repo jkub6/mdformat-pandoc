@@ -60,8 +60,9 @@ def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
     for item in node.children:
         for child in item.children:
             if child.type == "paragraph":
-                token = getattr(child, "token", None)
-                if token and not getattr(token, "hidden", False):
+                # Check 'hidden' attribute on RenderTreeNode directedly.
+                # In mdformat, tight list paragraphs have hidden=True.
+                if not getattr(child, "hidden", False):
                     is_loose = True
                     break
         if is_loose:
@@ -77,8 +78,7 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
     is_loose = False
     for child in node.children:
         if child.type == "paragraph":
-            token = getattr(child, "token", None)
-            if token and not getattr(token, "hidden", False):
+            if not getattr(child, "hidden", False):
                 is_loose = True
                 break
 
