@@ -40,5 +40,11 @@ test:
   PYTHONPATH=. pytest
 
 [group('Quality')]
+[doc('Run pandoc parity tests only (requires pandoc)')]
+test-parity:
+  PYTHONPATH=. pytest tests/test_pandoc_parity.py -v
+
+[group('Quality')]
 [doc('Run full CI pipeline: check, test')]
 ci: check test
+

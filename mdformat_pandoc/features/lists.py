@@ -53,6 +53,30 @@ def get_attr(node: RenderTreeNode, name: str) -> str | None:
     return None
 
 
+def _detect_start_number(node: RenderTreeNode) -> int:
+    """Detect the start number for an ordered list.
+
+    Checks the standard 'start' attribute first, then falls back to
+    parsing the first item's pandoc_markup to recover the value.
+    """
+    # Standard markdown-it attribute
+    start_attr = get_attr(node, "start")
+    if start_attr:
+        return int(start_attr)
+
+    # Fall back: parse from the first child's pandoc_markup
+    if node.children:
+        first = node.children[0]
+        markup = get_attr(first, "pandoc_markup")
+        if markup:
+            import re
+
+            m = re.match(r"\(?(\d+)[.)]", markup)
+            if m:
+                return int(m.group(1))
+    return 1
+
+
 def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
     """Render ordered list. Join items with newlines (double if loose)."""
     # Determine if list is loose
@@ -103,15 +127,16 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
     actual_spaces_count = int(pandoc_spaces) if pandoc_spaces else 2
     pandoc_markup = get_attr(node, "pandoc_markup")
 
+    # Detect #. hash markers and preserve them
+    is_hash = pandoc_markup is not None and pandoc_markup.lstrip("(").startswith("#")
+
     index = 0
     if parent:
         list_items = [c for c in parent.children if c.type == "list_item"]
         if node in list_items:
             index = list_items.index(node)
 
-        # Opening attributes of parent list
-        start_attr = get_attr(parent, "start")
-        start = int(start_attr) if start_attr else 1
+        start = _detect_start_number(parent)
         current_val = start + index
     else:
         current_val = 1
@@ -126,7 +151,10 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
         rest = "".join(lines[1:])
         return prefix + first_line + textwrap.indent(rest, " " * len(prefix))
 
-    if style == "roman":
+    if is_hash:
+        # Preserve #. / #) / (#) markers exactly as written
+        marker_val = "#"
+    elif style == "roman":
         markup = pandoc_markup or node.markup
         is_lower = not any(c.isupper() for c in markup) if markup else True
         marker_val = to_roman(current_val, lower=is_lower)

@@ -48,6 +48,7 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             just
+            pandoc
             (python-to-use.withPackages (p: [
               p.mdformat-pandoc
               p.ruff

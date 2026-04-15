@@ -33,6 +33,13 @@ from mdformat_pandoc.features.sub_sup import render_sub, render_sup
 from mdformat_pandoc.features.tables import render_cell, render_table
 from mdformat_pandoc.utils import PANDOC_DIV
 
+
+def render_strikethrough(node: "RenderTreeNode", context: "RenderContext") -> str:
+    """Render strikethrough: ~~text~~"""
+    content = "".join(child.render(context) for child in node.children)
+    return f"~~{content}~~"
+
+
 # Renderer mapping for mdformat - use dict for .update() support
 RENDERERS: dict[str, Render] = {
     PANDOC_DIV: render_pandoc_div,
@@ -53,6 +60,8 @@ RENDERERS: dict[str, Render] = {
     "td": render_cell,
     "sub": render_sub,
     "sup": render_sup,
+    "s": render_strikethrough,
     "custom_label_list": custom_labels.render_custom_label_list,
     "custom_label_item": custom_labels.render_custom_label_item,
 }
+

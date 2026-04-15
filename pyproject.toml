@@ -71,3 +71,7 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 addopts = "--strict-markers"
 xfail_strict = true
+markers = [
+    "pandoc: tests that require the pandoc binary",
+]
+
