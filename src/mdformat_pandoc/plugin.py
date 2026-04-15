@@ -37,7 +37,7 @@ def update_mdit(mdit: MarkdownIt) -> None:
     mdit.use(dollarmath_plugin)
 
     # Pandoc supports escaped spaces '\ '
-    def escaped_space(state: StateInline, silent: bool) -> bool:
+    def escaped_space(state: StateInline, silent: bool) -> bool:  # noqa: FBT001
         if (
             state.pos + 1 < state.posMax
             and state.src[state.pos] == "\\"

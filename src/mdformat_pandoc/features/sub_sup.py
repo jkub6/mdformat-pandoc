@@ -3,17 +3,16 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from markdown_it import MarkdownIt
-from markdown_it.rules_inline import StateInline
-
 if TYPE_CHECKING:
+    from markdown_it import MarkdownIt
+    from markdown_it.rules_inline import StateInline
     from mdformat.renderer import RenderContext, RenderTreeNode
 
 
 def superscript_plugin(md: MarkdownIt) -> None:
     """Markdown-it-py plugin to handle ^superscript^."""
 
-    def tokenize(state: StateInline, silent: bool) -> bool:
+    def tokenize(state: StateInline, silent: bool) -> bool:  # noqa: FBT001
         start = state.pos
         if state.src[start] != "^":
             return False
@@ -58,7 +57,7 @@ def superscript_plugin(md: MarkdownIt) -> None:
 def subscript_plugin(md: MarkdownIt) -> None:
     """Markdown-it-py plugin to handle ~subscript~."""
 
-    def tokenize(state: StateInline, silent: bool) -> bool:
+    def tokenize(state: StateInline, silent: bool) -> bool:  # noqa: FBT001
         start = state.pos
         if state.src[start] != "~":
             return False

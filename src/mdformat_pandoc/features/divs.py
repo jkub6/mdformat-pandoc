@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from markdown_it.rules_block import StateBlock
-from mdformat.renderer import RenderContext, RenderTreeNode
-
 from mdformat_pandoc.utils import PANDOC_DIV, format_attributes, parse_attributes
 
 if TYPE_CHECKING:
+    from markdown_it.rules_block import StateBlock
     from mdformat.renderer import RenderContext, RenderTreeNode
 
 __all__ = ["PANDOC_DIV", "pandoc_div_plugin", "render_pandoc_div"]
@@ -99,7 +97,7 @@ def _find_closing_fence(state: StateBlock, start_line: int, end_line: int, min_c
     return next_line
 
 
-def pandoc_div_plugin(state: StateBlock, start_line: int, end_line: int, silent: bool) -> bool:
+def pandoc_div_plugin(state: StateBlock, start_line: int, end_line: int, silent: bool) -> bool:  # noqa: FBT001
     """Parse pandoc fenced divs."""
     fence_info = _is_fence_start(state, start_line)
     if not fence_info:

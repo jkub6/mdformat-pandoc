@@ -1,37 +1,50 @@
 import re
-from typing import Any
+from typing import TypedDict
 
 from markdown_it import MarkdownIt
 from markdown_it.rules_block import list as std_list_mod
+from markdown_it.rules_block.list import list_block as std_list_block
 from markdown_it.rules_block.state_block import StateBlock
 from markdown_it.token import Token
 from mdit_py_plugins.utils import is_code_block
 
 
 def _determine_style_and_value(val: str, delim: str, spaces: int) -> tuple[str, int] | None:
+    style: str | None = None
+    numeric_val: int = 1
+
     if val.startswith("@"):
-        return "example", 1
-    if val == "#":
-        return "arabic", 1
-    if val.isdigit():
-        return "arabic", int(val)
-    if len(val) == 1 and val.isalpha():
+        style = "example"
+    elif val == "#":
+        style = "arabic"
+    elif val.isdigit():
+        style, numeric_val = "arabic", int(val)
+    elif len(val) == 1 and val.isalpha():
+        min_spaces_single_cap = 2
         # Single uppercase letter followed by a period requires at least two spaces
-        if val.isupper() and delim == "period" and spaces < 2:
-            return None
-        if val.lower() == "i":
-            return "roman", 1
-        return "alpha", ord(val.lower()) - ord("a") + 1
-
+        if val.isupper() and delim == "period" and spaces < min_spaces_single_cap:
+            pass  # Invalid: leave style as None
+        elif val.lower() == "i":
+            style = "roman"
+        else:
+            style, numeric_val = "alpha", ord(val.lower()) - ord("a") + 1
     # Multi-letter: must be Roman to be a valid Pandoc marker
-    if re.match(r"^[ivxlcmIVXLCM]+$", val):
-        return "roman", 1  # Placeholder for multi-letter roman
+    elif re.match(r"^[ivxlcmIVXLCM]+$", val):
+        style = "roman"  # Placeholder for multi-letter roman
 
-    return None
+    return (style, numeric_val) if style else None
 
 
-def parse_fancy_marker(state: StateBlock, start_line: int) -> dict[str, Any] | None:
-    """Parse a Pandoc-style fancy list marker."""
+class FancyMarkerInfo(TypedDict):
+    style: str
+    delim: str
+    value: int
+    spaces: int
+    markup: str
+    pos_after: int
+
+
+def parse_fancy_marker(state: StateBlock, start_line: int) -> FancyMarkerInfo | None:
     if start_line >= len(state.bMarks):
         return None
     pos = state.bMarks[start_line] + state.tShift[start_line]
@@ -82,38 +95,39 @@ def skip_fancy_ordered_list_marker(state: StateBlock, start_line: int) -> int:
     if info:
         # Cache the info for the current item so patched_push can find it
         state._last_fancy = info  # type: ignore[attr-defined]
-        return info["pos_after"]
+        return int(info["pos_after"])
     return -1
 
 
-def patched_int(val: Any, base: int = 10) -> int:
+def patched_int(val: object, base: int = 10) -> int:
     """A patched version of int() that handles non-numeric list items."""
     try:
+        if isinstance(val, int):
+            return val
         if isinstance(val, str) and not val.isdigit():
             return 1
-        return int(val, base)
+        return int(str(val), base)
     except (ValueError, TypeError):
         return 1
 
 
 # Global patch state to avoid multiple patches
-_PATCHED = False
+_PATCH_STATE = {"applied": False}
 
 
 def apply_global_patches() -> None:
     """Apply global monkeypatches to markdown-it-py list rule."""
-    global _PATCHED
-    if _PATCHED:
+    if _PATCH_STATE["applied"]:
         return
 
     # We patch the module-level functions that std_list_block calls
     std_list_mod.skipOrderedListMarker = skip_fancy_ordered_list_marker  # type: ignore[assignment]
     std_list_mod.int = patched_int  # type: ignore[attr-defined]
 
-    _PATCHED = True
+    _PATCH_STATE["applied"] = True
 
 
-def fancy_lists_rule(state: StateBlock, start_line: int, end_line: int, silent: bool) -> bool:
+def fancy_lists_rule(state: StateBlock, start_line: int, end_line: int, silent: bool) -> bool:  # noqa: FBT001
     """A block rule that intercepts lists to support Pandoc fancy markers."""
     if is_code_block(state, start_line):
         return False
@@ -150,7 +164,6 @@ def fancy_lists_rule(state: StateBlock, start_line: int, end_line: int, silent: 
     state.push = patched_push  # type: ignore[method-assign, assignment]
     try:
         state._last_fancy = info  # type: ignore[attr-defined]
-        from markdown_it.rules_block.list import list_block as std_list_block
 
         return bool(std_list_block(state, start_line, end_line, silent))
     finally:

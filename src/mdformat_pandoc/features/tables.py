@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
-
-from mdformat.renderer import RenderContext, RenderTreeNode
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from mdformat.renderer import RenderContext, RenderTreeNode
+
     Render = Callable[[RenderTreeNode, RenderContext], str]
-else:
-    Render = Any
 
 
 def _get_cell_alignment(node: RenderTreeNode) -> str:
@@ -17,7 +16,7 @@ def _get_cell_alignment(node: RenderTreeNode) -> str:
     Returns 'left', 'right', 'center', or ''.
     """
     style_attr = node.attrs.get("style", "")
-    style = str(style_attr) if style_attr is not None else ""
+    style = str(style_attr) if style_attr else ""
 
     if "text-align:center" in style:
         return "center"
@@ -152,7 +151,6 @@ def render_table(node: RenderTreeNode, context: RenderContext) -> str:
     lines.append("| " + " | ".join(delim_cells) + " |")
 
     # Body Rows
-    for row in rows:
-        lines.append(_render_table_row(row, col_widths))
+    lines.extend(_render_table_row(row, col_widths) for row in rows)
 
     return "\n".join(lines)

@@ -52,9 +52,7 @@ def parse_attributes(attr_string: str) -> dict[str, str | list[str]]:
         result["id"] = match.group(1)
 
     # Classes: .classname
-    classes: list[str] = []
-    for match in re.finditer(r"\.([\w-]+)", attr_string):
-        classes.append(match.group(1))
+    classes: list[str] = [match.group(1) for match in re.finditer(r"\.([\w-]+)", attr_string)]
     result["classes"] = classes
 
     # Key-value pairs: key="value" or key='value' or key=value
@@ -86,8 +84,7 @@ def format_attributes(attrs: dict[str, str | list[str]]) -> str:
     # Classes
     classes = attrs.get("classes", [])
     if isinstance(classes, list):
-        for cls in classes:
-            parts.append(f".{cls}")
+        parts.extend(f".{cls}" for cls in classes)
 
     # Other key-value attributes
     for key, value in attrs.items():

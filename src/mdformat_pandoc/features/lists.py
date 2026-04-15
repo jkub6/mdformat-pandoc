@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import textwrap
 from typing import TYPE_CHECKING
 
@@ -7,7 +8,7 @@ if TYPE_CHECKING:
     from mdformat.renderer import RenderContext, RenderTreeNode
 
 
-def to_alpha(n: int, lower: bool = True) -> str:
+def to_alpha(n: int, *, lower: bool = True) -> str:
     """Convert integer to alphabetic (a, b, c... or A, B, C...)."""
     if n <= 0:
         return str(n)
@@ -18,7 +19,7 @@ def to_alpha(n: int, lower: bool = True) -> str:
     return res
 
 
-def to_roman(n: int, lower: bool = True) -> str:
+def to_roman(n: int, *, lower: bool = True) -> str:
     """Convert integer to roman numerals."""
     if n <= 0:
         return str(n)
@@ -68,8 +69,6 @@ def _detect_start_number(node: RenderTreeNode) -> int:
         first = node.children[0]
         markup = get_attr(first, "pandoc_markup")
         if markup:
-            import re
-
             m = re.match(r"\(?(\d+)[.)]", markup)
             if m:
                 return int(m.group(1))
@@ -94,7 +93,9 @@ def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
     return sep.join(child.render(context) for child in node.children)
 
 
-def _get_marker_val(current_val: int, style: str, pandoc_markup: str | None, is_hash: bool) -> str:
+def _get_marker_val(
+    current_val: int, style: str, pandoc_markup: str | None, *, is_hash: bool
+) -> str:
     if is_hash:
         return "#"
     if style == "roman":
@@ -112,11 +113,13 @@ def _format_list_marker(
     node: RenderTreeNode,
     parent: RenderTreeNode | None,
     content: str,
-    style: str,
-    delim: str,
-    actual_spaces_count: int,
-    pandoc_markup: str | None,
 ) -> str:
+    style = get_attr(node, "pandoc_style") or "arabic"
+    delim = get_attr(node, "pandoc_delim") or "period"
+    pandoc_spaces = get_attr(node, "pandoc_spaces")
+    actual_spaces_count = int(pandoc_spaces) if pandoc_spaces else 2
+    pandoc_markup = get_attr(node, "pandoc_markup")
+
     # Detect #. hash markers and preserve them
     is_hash = pandoc_markup is not None and pandoc_markup.lstrip("(").startswith("#")
 
@@ -141,7 +144,7 @@ def _format_list_marker(
         rest = "".join(lines[1:])
         return prefix + first_line + textwrap.indent(rest, " " * len(prefix))
 
-    marker_val = _get_marker_val(current_val, style, pandoc_markup, is_hash)
+    marker_val = _get_marker_val(current_val, style, pandoc_markup, is_hash=is_hash)
 
     # Wrap with delimiters
     if delim == "parens":
@@ -190,15 +193,7 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
         return content
 
     # Handle ordered lists (including fancy Pandoc ones)
-    style = get_attr(node, "pandoc_style") or "arabic"
-    delim = get_attr(node, "pandoc_delim") or "period"
-    pandoc_spaces = get_attr(node, "pandoc_spaces")
-    actual_spaces_count = int(pandoc_spaces) if pandoc_spaces else 2
-    pandoc_markup = get_attr(node, "pandoc_markup")
-
-    return _format_list_marker(
-        node, parent, content, style, delim, actual_spaces_count, pandoc_markup
-    )
+    return _format_list_marker(node, parent, content)
 
 
 def render_dl_open(node: RenderTreeNode, context: RenderContext) -> str:

@@ -4,17 +4,16 @@ import re
 import textwrap
 from typing import TYPE_CHECKING
 
-from markdown_it import MarkdownIt
-from markdown_it.rules_block import StateBlock
-
 if TYPE_CHECKING:
+    from markdown_it import MarkdownIt
+    from markdown_it.rules_block import StateBlock
     from mdformat.renderer import RenderContext, RenderTreeNode
 
 # Match {::LABEL} spaces
 LABEL_RE = re.compile(r"^\{::(?P<label>[^}]+)\}(?P<spaces>[ \t]+)")
 
 
-def custom_label_rule(state: StateBlock, start_line: int, end_line: int, silent: bool) -> bool:
+def custom_label_rule(state: StateBlock, start_line: int, end_line: int, silent: bool) -> bool:  # noqa: FBT001
     """Block rule for custom label lists {::LABEL} content."""
     pos = state.bMarks[start_line] + state.tShift[start_line]
     max_pos = state.eMarks[start_line]
@@ -110,8 +109,8 @@ def render_custom_label_list(node: RenderTreeNode, context: RenderContext) -> st
 
 def render_custom_label_item(node: RenderTreeNode, context: RenderContext) -> str:
     """Render a custom label item."""
-    label = node.meta.get("label")
-    spaces_count = node.meta.get("spaces", 1)
+    label = str(node.meta.get("label", ""))
+    spaces_count = int(node.meta.get("spaces", 1))
     marker = f"{{::{label}}}"
     prefix = marker + (" " * spaces_count)
 

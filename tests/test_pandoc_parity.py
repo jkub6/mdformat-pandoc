@@ -82,11 +82,11 @@ CUSTOM_LABEL_FIXTURES = _collect_fixtures("custom_labels")
 class TestIdempotency:
     """Verify format(format(x)) == format(x) for all fixtures."""
 
-    @pytest.mark.parametrize("test_id, md", ALL_FIXTURES, ids=[f[0] for f in ALL_FIXTURES])
+    @pytest.mark.parametrize(("test_id", "md"), ALL_FIXTURES, ids=[f[0] for f in ALL_FIXTURES])
     def test_idempotent(self, test_id: str, md: str) -> None:
         assert_idempotent(md)
 
-    @pytest.mark.parametrize("test_id, md", ALL_FIXTURES, ids=[f[0] for f in ALL_FIXTURES])
+    @pytest.mark.parametrize(("test_id", "md"), ALL_FIXTURES, ids=[f[0] for f in ALL_FIXTURES])
     def test_idempotent_wrap80(self, test_id: str, md: str) -> None:
         assert_idempotent(md, wrap=80)
 
@@ -105,11 +105,15 @@ PANDOC_SKIP = pytest.mark.skipif(
 class TestPandocParity:
     """Verify pandoc_html(x) == pandoc_html(format(x)) for standard fixtures."""
 
-    @pytest.mark.parametrize("test_id, md", PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES])
+    @pytest.mark.parametrize(
+        ("test_id", "md"), PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES]
+    )
     def test_parity(self, test_id: str, md: str) -> None:
         assert_pandoc_parity(md)
 
-    @pytest.mark.parametrize("test_id, md", PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES])
+    @pytest.mark.parametrize(
+        ("test_id", "md"), PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES]
+    )
     def test_parity_wrap80(self, test_id: str, md: str) -> None:
         assert_pandoc_parity(md, wrap=80)
 
@@ -127,13 +131,13 @@ class TestCustomLabels:
     """
 
     @pytest.mark.parametrize(
-        "test_id, md", CUSTOM_LABEL_FIXTURES, ids=[f[0] for f in CUSTOM_LABEL_FIXTURES]
+        ("test_id", "md"), CUSTOM_LABEL_FIXTURES, ids=[f[0] for f in CUSTOM_LABEL_FIXTURES]
     )
     def test_idempotent(self, test_id: str, md: str) -> None:
         assert_idempotent(md)
 
     @pytest.mark.parametrize(
-        "test_id, md", CUSTOM_LABEL_FIXTURES, ids=[f[0] for f in CUSTOM_LABEL_FIXTURES]
+        ("test_id", "md"), CUSTOM_LABEL_FIXTURES, ids=[f[0] for f in CUSTOM_LABEL_FIXTURES]
     )
     def test_idempotent_wrap80(self, test_id: str, md: str) -> None:
         assert_idempotent(md, wrap=80)

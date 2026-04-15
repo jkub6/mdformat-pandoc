@@ -40,6 +40,6 @@ TEST_CASES = [
 ]
 
 
-@pytest.mark.parametrize("name, inp, out", TEST_CASES)
+@pytest.mark.parametrize(("name", "inp", "out"), TEST_CASES)
 def test_fmt(name, inp, out):
     assert mdformat.text(inp, extensions={"pandoc"}) == out
