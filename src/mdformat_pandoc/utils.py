@@ -31,6 +31,7 @@ def parse_attributes(attr_string: str) -> dict[str, str | list[str]]:
 
     Returns:
         Dict with 'id', 'classes' (list), and other key-value pairs.
+
     """
     result: dict[str, str | list[str]] = {"id": "", "classes": []}
 
@@ -74,6 +75,7 @@ def format_attributes(attrs: dict[str, str | list[str]]) -> str:
 
     Returns:
         Formatted attribute string like {#id .class1 .class2 key="value"}
+
     """
     parts: list[str] = []
 

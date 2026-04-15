@@ -1,8 +1,8 @@
-:::: Warning
+:::: {.Warning}
 
 This is a warning.
 
-::: Danger
+::: {.Danger}
 
 This is a warning within a warning.
 

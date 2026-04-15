@@ -7,20 +7,18 @@ name = "mdformat_pandoc"
 version = "0.1.0"
 description = "Mdformat plugin for Pandoc-style fenced divs, tables, and extended syntax."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Antigravity", email = "antigravity@example.com"},
+    {name = "Jake", email = "jkub66@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Markup :: Markdown",
 ]
@@ -33,14 +31,20 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
-    "mypy>=1.0",
-    "ruff>=0.1.0",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-randomly",
+    "pytest-timeout",
+    "mypy",
+    "ruff",
+    "vulture",
     "types-setuptools",
 ]
 
 [project.urls]
 Homepage = "https://github.com/example/mdformat-pandoc"
+Documentation = "https://github.com/example/mdformat-pandoc#readme"
 Repository = "https://github.com/example/mdformat-pandoc"
 Issues = "https://github.com/example/mdformat-pandoc/issues"
 
@@ -52,26 +56,119 @@ pandoc = "mdformat_pandoc"
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py313"
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "I", "N", "UP", "PL", "RUF"]
-ignore = []
+select = [
+    "F",      # Pyflakes (logic errors)
+    "E",      # pycodestyle (style)
+    "W",      # pycodestyle (warnings)
+    "I",      # isort (imports)
+    "N",      # pep8-naming (class/function names)
+    "B",      # flake8-bugbear (likely bugs/design problems)
+    "A",      # flake8-builtins (shadowing builtins)
+    "C4",     # flake8-comprehensions (better list/dict comps)
+    "DTZ",    # flake8-datetimez (require timezone-aware dates)
+    "SIM",    # flake8-simplify (suggestions for simpler code)
+    "T20",    # flake8-print (disallow print, prefer logging)
+    "RUF",    # Ruff-specific rules
+    "ERA",    # eradicate (ban commented out code)
+    "PL",     # Pylint (static analysis)
+    "S",      # Bandit (Security)
+    "UP",     # pyupgrade (Modernize syntax)
+    "D",      # pydocstyle (Docstrings)
+    "PT",     # flake8-pytest-style (Test best practices)
+    "C90",    # McCabe (Complexity check)
+    "ANN",    # Enforce Type Hints (Strict!)
+    "TRY",    # Exception handling anti-patterns
+    "BLE",    # Ban blind exceptions (except Exception:)
+    "PERF",   # Performance anti-patterns
+    "LOG",    # Logging best practices
+    "RET",    # Return value consistency
+    "TCH",    # Type-checking blocks (Move imports under IF TYPE_CHECKING)
+    "ARG",    # Unused arguments (strict)
+    "TID",    # flake8-tidy-imports
+    "FBT",    # Boolean trap
+    "COM",    # Trailing commas
+    "G",      # Logging format
+]
+ignore = [
+    "E501", # Line too long (handled by formatter)
+    "D203", # One blank line before class (conflicts with D211)
+    "D213", # Multi-line docstring summary at second line (conflicts with D212)
+    "COM812", # Trailing comma missing (conflicts with formatter)
+    "ISC001", # Implicit string concatenation (conflicts with formatter)
+]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 
-[tool.mypy]
-strict = true
-python_version = "3.13"
-ignore_missing_imports = true
+[tool.ruff.lint.per-file-ignores]
+# Test code is allowed to:
+# - S101: Use assert statements
+# - ARG: Have unused arguments (fixtures)
+# - S603: Use subprocess without shell=False validation
+# - S607: Starting process with partial executable path (e.g., "ninja")
+# - PT011: pytest.raises without match parameter
+# - TRY301: Abstract raise to inner function (intentional for testing exceptions)
+# - PLC0415: Inline imports (common practice for test isolation)
+# - ANN: Annotations
+# - D100, D103: Doc strings
+"tests/**/*.py" = ["S101", "ARG", "S603", "S607", "PT011", "TRY301", "PLC0415", "ANN", "D100", "D103", "PLR2004"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers"
-xfail_strict = true
+python_files = "test_*.py"
+python_functions = "test_*"
+python_classes = "Test*"
+addopts = [
+    "--strict",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--tb=short",
+    "-nauto",
+    "--randomly-seed=1234",
+]
 markers = [
     "pandoc: tests that require the pandoc binary",
 ]
+timeout = 30
+pythonpath = "src"
 
+[tool.mypy]
+files = "src"
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+disallow_any_unimported = true
+disallow_any_expr = true
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_subclassing_any = true
+warn_unreachable = true
+warn_unused_ignores = true
+no_implicit_reexport = true
+strict_equality = true
+extra_checks = true
+
+[tool.coverage.run]
+branch = true
+source = ["src/mdformat_pandoc"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+[tool.vulture]
+min_confidence = 80
+paths = ["src"]

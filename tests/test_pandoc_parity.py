@@ -16,11 +16,9 @@ Both dimensions are tested with and without wrapping.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
-
 from pandoc_golden import (
     assert_idempotent,
     assert_pandoc_parity,
@@ -45,6 +43,7 @@ def _collect_fixtures(
         categories: Subdirectory names under fixtures/ to scan.
             If empty, scan all subdirectories.
         skip_parity: If True, exclude directories in SKIP_PARITY_DIRS.
+
     """
     fixtures: list[tuple[str, str]] = []
 
@@ -106,15 +105,11 @@ PANDOC_SKIP = pytest.mark.skipif(
 class TestPandocParity:
     """Verify pandoc_html(x) == pandoc_html(format(x)) for standard fixtures."""
 
-    @pytest.mark.parametrize(
-        "test_id, md", PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES]
-    )
+    @pytest.mark.parametrize("test_id, md", PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES])
     def test_parity(self, test_id: str, md: str) -> None:
         assert_pandoc_parity(md)
 
-    @pytest.mark.parametrize(
-        "test_id, md", PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES]
-    )
+    @pytest.mark.parametrize("test_id, md", PARITY_FIXTURES, ids=[f[0] for f in PARITY_FIXTURES])
     def test_parity_wrap80(self, test_id: str, md: str) -> None:
         assert_pandoc_parity(md, wrap=80)
 

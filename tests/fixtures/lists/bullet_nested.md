@@ -1,9 +1,9 @@
 - fruits
-  + apples
+  - apples
     - macintosh
     - red delicious
-  + pears
-  + peaches
+  - pears
+  - peaches
 - vegetables
-  + broccoli
-  + chard
+  - broccoli
+  - chard

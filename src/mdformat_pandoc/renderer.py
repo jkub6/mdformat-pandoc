@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from mdformat.renderer import RenderContext, RenderTreeNode
@@ -9,6 +10,7 @@ if TYPE_CHECKING:
 else:
     Render = Any
 
+from mdformat_pandoc.features import custom_labels
 from mdformat_pandoc.features.divs import render_pandoc_div
 from mdformat_pandoc.features.footnotes import (
     render_footnote_anchor,
@@ -24,7 +26,6 @@ from mdformat_pandoc.features.lists import (
     render_list_item,
     render_ordered_list,
 )
-from mdformat_pandoc.features import custom_labels
 from mdformat_pandoc.features.math import (
     render_math_block,
     render_math_inline,
@@ -34,7 +35,7 @@ from mdformat_pandoc.features.tables import render_cell, render_table
 from mdformat_pandoc.utils import PANDOC_DIV
 
 
-def render_strikethrough(node: "RenderTreeNode", context: "RenderContext") -> str:
+def render_strikethrough(node: RenderTreeNode, context: RenderContext) -> str:
     """Render strikethrough: ~~text~~"""
     content = "".join(child.render(context) for child in node.children)
     return f"~~{content}~~"
@@ -64,4 +65,3 @@ RENDERERS: dict[str, Render] = {
     "custom_label_list": custom_labels.render_custom_label_list,
     "custom_label_item": custom_labels.render_custom_label_item,
 }
-

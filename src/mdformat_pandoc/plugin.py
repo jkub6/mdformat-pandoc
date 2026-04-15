@@ -4,11 +4,12 @@ from mdit_py_plugins.deflist import deflist_plugin
 from mdit_py_plugins.dollarmath import dollarmath_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.front_matter import front_matter_plugin
-# from mdit_py_plugins.subscript import sub_plugin  # We use our own custom subscript plugin
 
+from mdformat_pandoc.features.custom_labels import custom_label_plugin
+
+# from mdit_py_plugins.subscript import sub_plugin  # We use our own custom subscript plugin
 from mdformat_pandoc.features.divs import PANDOC_DIV, pandoc_div_plugin
 from mdformat_pandoc.features.fancy_lists import fancy_lists_plugin
-from mdformat_pandoc.features.custom_labels import custom_label_plugin
 from mdformat_pandoc.features.sub_sup import subscript_plugin, superscript_plugin
 
 

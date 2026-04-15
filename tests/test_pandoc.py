@@ -18,13 +18,25 @@ TEST_CASES = [
     ("Superscript with Space", "test ^super\\ script^ here\n", "test ^super\\ script^ here\n"),
     ("Nested Sub/Sup", "test ~sub^sup^~ here\n", "test ~sub^sup^~ here\n"),
     ("Mixed Subscript", "test ~*bold\\ sub*~ here\n", "test ~*bold\\ sub*~ here\n"),
-    ("Custom Label List", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n", "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n"),
-    ("Custom Label with ID", "{::P(#p1)} All humans are mortal.\n", "{::P(#p1)} All humans are mortal.\n"),
+    (
+        "Custom Label List",
+        "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n",
+        "{::P} All humans are mortal.\n{::Prem2} Socrates is human.\n{::C1} Therefore, Socrates is mortal.\n",
+    ),
+    (
+        "Custom Label with ID",
+        "{::P(#p1)} All humans are mortal.\n",
+        "{::P(#p1)} All humans are mortal.\n",
+    ),
     ("Tight List Validation", "1. a\n2. b\n", "1. a\n2. b\n"),
     ("List Marker initials", "- N. T. Wright\n", "- N. T. Wright\n"),
     ("Fancy List uppercase period 2 spaces", "A.  Item\n", "A.  Item\n"),
     ("Fancy List uppercase paren 1 space", "A) Item\n", "A) Item\n"),
-    ("List Item Block Joining", "1. Para:\n   ```\n   code\n   ```\n", "1. Para:\n   ```\n   code\n   ```\n"),
+    (
+        "List Item Block Joining",
+        "1. Para:\n   ```\n   code\n   ```\n",
+        "1. Para:\n   ```\n   code\n   ```\n",
+    ),
 ]
 
 

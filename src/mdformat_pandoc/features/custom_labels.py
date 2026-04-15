@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 import textwrap
+from typing import TYPE_CHECKING
 
 from markdown_it import MarkdownIt
 from markdown_it.rules_block import StateBlock
@@ -54,7 +54,7 @@ def custom_label_rule(state: StateBlock, start_line: int, end_line: int, silent:
         content_lines = [line_text[content_start:].strip()]
         # The indentation level is roughly the start of the content
         indent_needed = content_start
-        
+
         next_line = current_line + 1
         while next_line < end_line:
             # We must be careful not to consume a line that belongs to another block
@@ -70,11 +70,11 @@ def custom_label_rule(state: StateBlock, start_line: int, end_line: int, silent:
             # (unless it's a paragraph continuation, but we are a block rule)
             if n_indent < indent_needed and not LABEL_RE.match(n_text):
                 # Standard markdown allows 'lazy' continuation for some blocks,
-                # but for custom labels we'll require indentation or at least 
+                # but for custom labels we'll require indentation or at least
                 # check if it looks like a new block.
-                # If it's not indented and not another label, it might be a 
+                # If it's not indented and not another label, it might be a
                 # normal paragraph starting.
-                pass 
+                pass
 
             # If it's a new label, stop
             if LABEL_RE.match(n_text):

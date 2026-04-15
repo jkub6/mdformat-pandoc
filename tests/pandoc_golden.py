@@ -102,6 +102,7 @@ def assert_pandoc_parity(
         md_input: The raw markdown input.
         wrap: If set, pass --wrap=<N> to mdformat.
         extensions: mdformat extensions to enable (defaults to {"pandoc"}).
+
     """
     import mdformat
 
