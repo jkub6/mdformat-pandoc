@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 from markdown_it import MarkdownIt
@@ -99,19 +100,29 @@ def subscript_plugin(md: MarkdownIt) -> None:
     md.inline.ruler.after("emphasis", "sub", tokenize)
 
 
+def _escape_spaces_for_pandoc(content: str) -> str:
+    """Escape spaces (and WRAP_POINT markers) with backslash for Pandoc sub/superscripts.
+
+    When mdformat wraps text, spaces in text tokens are replaced with
+    WRAP_POINT (\\x00) before sub/sup renderers see them. We need to
+    replace both regular spaces and WRAP_POINT characters with the
+    Pandoc escaped-space sequence ``\\ ``.
+    """
+    # Replace WRAP_POINT (\x00) and regular spaces with escaped space
+    return re.sub(r"[\x00 ]", "\\ ", content)
+
+
 def render_sub(node: RenderTreeNode, context: RenderContext) -> str:
     """Render subscript: ~text~"""
-    # mdit-py-plugins subscript uses 'sub' as token type
     content = "".join(child.render(context) for child in node.children)
     # Pandoc requires spaces in subscripts to be escaped with a backslash
-    content = content.replace(" ", "\\ ")
+    content = _escape_spaces_for_pandoc(content)
     return f"~{content}~"
 
 
 def render_sup(node: RenderTreeNode, context: RenderContext) -> str:
     """Render superscript: ^text^"""
-    # Our custom superscript uses 'sup' as token type
     content = "".join(child.render(context) for child in node.children)
     # Pandoc requires spaces in superscripts to be escaped with a backslash
-    content = content.replace(" ", "\\ ")
+    content = _escape_spaces_for_pandoc(content)
     return f"^{content}^"
