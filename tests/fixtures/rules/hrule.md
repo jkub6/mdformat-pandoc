@@ -1,0 +1,5 @@
+* * * *
+
+Some text between rules.
+
+---------------
