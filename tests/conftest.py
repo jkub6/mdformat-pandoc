@@ -1,4 +1,4 @@
-import sys
+import contextlib
 from unittest.mock import patch
 
 
@@ -11,7 +11,6 @@ def pytest_configure(config):
     # ALWAYS inject our local plugin into mdformat's parser extension registry.
     # This ensures that even if a version is installed in the environment (e.g. Nix store),
     # we use the local code under test.
-    print("DEBUG: Force injecting local pandoc plugin into mdformat.plugins", file=sys.stderr)
 
     # Pre-emptively patch entry_points before mdformat.plugins uses it
 
@@ -45,7 +44,5 @@ def pytest_configure(config):
     patcher.start()
 
     # If PARSER_EXTENSIONS was already initialized, we must update it
-    try:
+    with contextlib.suppress(AttributeError, TypeError):
         mdformat.plugins.PARSER_EXTENSIONS["pandoc"] = mdformat_pandoc
-    except Exception as e:
-        print(f"DEBUG: Could not directly update PARSER_EXTENSIONS: {e}", file=sys.stderr)

@@ -74,7 +74,7 @@ def render_footnote_open(node: RenderTreeNode, context: RenderContext) -> str:
     return f"{marker}\n{indented_content}"
 
 
-def render_footnote_anchor(node: RenderTreeNode, context: RenderContext) -> str:
+def render_footnote_anchor(_node: RenderTreeNode, _context: RenderContext) -> str:
     """Render the backlink/anchor at end of footnote.
 
     In Markdown source, we do NOT write the backlink character manually.

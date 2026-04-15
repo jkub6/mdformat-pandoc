@@ -37,9 +37,8 @@ def to_roman(n: int, lower: bool = True) -> str:
 def get_attr(node: RenderTreeNode, name: str) -> str | None:
     """Helper to get an attribute from a node, supporting both dict and list-of-lists."""
     # Try meta first (always a dict if present)
-    if meta := getattr(node, "meta", {}):
-        if val := meta.get(name):
-            return str(val)
+    if (meta := getattr(node, "meta", {})) and (val := meta.get(name)):
+        return str(val)
 
     # Then try attrs
     attrs = getattr(node, "attrs", {})
@@ -83,12 +82,11 @@ def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
     is_loose = False
     for item in node.children:
         for child in item.children:
-            if child.type == "paragraph":
+            if child.type == "paragraph" and not getattr(child, "hidden", False):
                 # Check 'hidden' attribute on RenderTreeNode directedly.
                 # In mdformat, tight list paragraphs have hidden=True.
-                if not getattr(child, "hidden", False):
-                    is_loose = True
-                    break
+                is_loose = True
+                break
         if is_loose:
             break
 
@@ -96,37 +94,29 @@ def render_ordered_list(node: RenderTreeNode, context: RenderContext) -> str:
     return sep.join(child.render(context) for child in node.children)
 
 
-def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
-    """Render list item, preserving Pandoc fancy markers and spacing."""
-    # 1. Render content first to handle loose lists and scoping
-    is_loose = False
-    for child in node.children:
-        if child.type == "paragraph":
-            if not getattr(child, "hidden", False):
-                is_loose = True
-                break
+def _get_marker_val(current_val: int, style: str, pandoc_markup: str | None, is_hash: bool) -> str:
+    if is_hash:
+        return "#"
+    if style == "roman":
+        markup = pandoc_markup or ""
+        is_lower = not any(c.isupper() for c in markup) if markup else True
+        return to_roman(current_val, lower=is_lower)
+    if style == "alpha":
+        markup = pandoc_markup or ""
+        is_lower = not any(c.isupper() for c in markup) if markup else True
+        return to_alpha(current_val, lower=is_lower)
+    return str(current_val)
 
-    sep = "\n\n" if is_loose else "\n"
-    content = sep.join(child.render(context) for child in node.children)
-    if not is_loose:
-        content = content.strip()
 
-    # 2. Determine the marker string
-    parent = node.parent
-
-    # Handle bullet lists (standard markdown)
-    # The default mdformat bullet_list renderer adds the marker,
-    # so we only return the content.
-    if parent and parent.type == "bullet_list":
-        return content
-
-    # Handle ordered lists (including fancy Pandoc ones)
-    style = get_attr(node, "pandoc_style") or "arabic"
-    delim = get_attr(node, "pandoc_delim") or "period"
-    pandoc_spaces = get_attr(node, "pandoc_spaces")
-    actual_spaces_count = int(pandoc_spaces) if pandoc_spaces else 2
-    pandoc_markup = get_attr(node, "pandoc_markup")
-
+def _format_list_marker(
+    node: RenderTreeNode,
+    parent: RenderTreeNode | None,
+    content: str,
+    style: str,
+    delim: str,
+    actual_spaces_count: int,
+    pandoc_markup: str | None,
+) -> str:
     # Detect #. hash markers and preserve them
     is_hash = pandoc_markup is not None and pandoc_markup.lstrip("(").startswith("#")
 
@@ -151,19 +141,7 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
         rest = "".join(lines[1:])
         return prefix + first_line + textwrap.indent(rest, " " * len(prefix))
 
-    if is_hash:
-        # Preserve #. / #) / (#) markers exactly as written
-        marker_val = "#"
-    elif style == "roman":
-        markup = pandoc_markup or node.markup
-        is_lower = not any(c.isupper() for c in markup) if markup else True
-        marker_val = to_roman(current_val, lower=is_lower)
-    elif style == "alpha":
-        markup = pandoc_markup or node.markup
-        is_lower = not any(c.isupper() for c in markup) if markup else True
-        marker_val = to_alpha(current_val, lower=is_lower)
-    else:
-        marker_val = str(current_val)
+    marker_val = _get_marker_val(current_val, style, pandoc_markup, is_hash)
 
     # Wrap with delimiters
     if delim == "parens":
@@ -186,6 +164,41 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
     first_line = lines[0]
     rest = "".join(lines[1:])
     return prefix + first_line + textwrap.indent(rest, " " * len(prefix))
+
+
+def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
+    """Render list item, preserving Pandoc fancy markers and spacing."""
+    # 1. Render content first to handle loose lists and scoping
+    is_loose = False
+    for child in node.children:
+        if child.type == "paragraph" and not getattr(child, "hidden", False):
+            is_loose = True
+            break
+
+    sep = "\n\n" if is_loose else "\n"
+    content = sep.join(child.render(context) for child in node.children)
+    if not is_loose:
+        content = content.strip()
+
+    # 2. Determine the marker string
+    parent = node.parent
+
+    # Handle bullet lists (standard markdown)
+    # The default mdformat bullet_list renderer adds the marker,
+    # so we only return the content.
+    if parent and parent.type == "bullet_list":
+        return content
+
+    # Handle ordered lists (including fancy Pandoc ones)
+    style = get_attr(node, "pandoc_style") or "arabic"
+    delim = get_attr(node, "pandoc_delim") or "period"
+    pandoc_spaces = get_attr(node, "pandoc_spaces")
+    actual_spaces_count = int(pandoc_spaces) if pandoc_spaces else 2
+    pandoc_markup = get_attr(node, "pandoc_markup")
+
+    return _format_list_marker(
+        node, parent, content, style, delim, actual_spaces_count, pandoc_markup
+    )
 
 
 def render_dl_open(node: RenderTreeNode, context: RenderContext) -> str:

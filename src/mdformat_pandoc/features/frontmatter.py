@@ -1,7 +1,7 @@
 from mdformat.renderer import RenderContext, RenderTreeNode
 
 
-def render_front_matter(node: RenderTreeNode, context: RenderContext) -> str:
+def render_front_matter(node: RenderTreeNode, _context: RenderContext) -> str:
     """Render YAML front matter.
 
     Front matter token info usually contains the style (yaml, toml).
