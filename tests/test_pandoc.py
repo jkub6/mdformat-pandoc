@@ -55,7 +55,45 @@ TEST_CASES = [
     ),
 ]
 
+WRAP_TEST_CASES = [
+    (
+        "Callout Wrap Preserves Header",
+        "> [!info]+\n> Inbox Items ![[inbox.base]]\n",
+        "> [!info]+\n> Inbox Items ![[inbox.base]]\n",
+    ),
+    (
+        "Callout Wrap No Fold",
+        "> [!info]\n> Basic callout content.\n",
+        "> [!info]\n> Basic callout content.\n",
+    ),
+    (
+        "Callout Wrap Collapsed",
+        "> [!danger]- Collapsed Title\n> This content is collapsed by default.\n",
+        "> [!danger]- Collapsed Title\n> This content is collapsed by default.\n",
+    ),
+    (
+        "Callout Wrap Multiline Body",
+        "> [!tip]\n> First line.\n> Second line.\n",
+        "> [!tip]\n> First line. Second line.\n",
+    ),
+    (
+        "Callout Wrap With Wikilink",
+        "> [!tip]\n> Check [[related page]] for details.\n",
+        "> [!tip]\n> Check [[related page]] for details.\n",
+    ),
+    (
+        "Normal Blockquote Wrap Unchanged",
+        "> This is a normal blockquote.\n",
+        "> This is a normal blockquote.\n",
+    ),
+]
+
 
 @pytest.mark.parametrize(("name", "inp", "out"), TEST_CASES)
 def test_fmt(name, inp, out):
     assert mdformat.text(inp, extensions={"pandoc"}) == out
+
+
+@pytest.mark.parametrize(("name", "inp", "out"), WRAP_TEST_CASES)
+def test_fmt_wrap80(name, inp, out):
+    assert mdformat.text(inp, extensions={"pandoc"}, options={"wrap": 80}) == out

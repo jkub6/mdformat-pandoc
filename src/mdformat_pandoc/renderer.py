@@ -12,6 +12,7 @@ else:
     Render = Any
 
 from mdformat_pandoc.features import custom_labels
+from mdformat_pandoc.features.callouts import render_blockquote
 from mdformat_pandoc.features.divs import render_pandoc_div
 from mdformat_pandoc.features.footnotes import (
     render_footnote_anchor,
@@ -69,4 +70,5 @@ RENDERERS: dict[str, Render] = {
     "custom_label_item": custom_labels.render_custom_label_item,
     "wikilink": render_wikilink,
     "obsidian_embed": render_obsidian_embed,
+    "blockquote": render_blockquote,
 }
