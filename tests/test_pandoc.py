@@ -37,6 +37,22 @@ TEST_CASES = [
         "1. Para:\n   ```\n   code\n   ```\n",
         "1. Para:\n   ```\n   code\n   ```\n",
     ),
+    ("Wikilink", "[[page]]\n", "[[page]]\n"),
+    ("Wikilink Alias", "[[page|display text]]\n", "[[page|display text]]\n"),
+    ("Wikilink Inline", "See [[page]] for details.\n", "See [[page]] for details.\n"),
+    ("Obsidian Embed", "![[file]]\n", "![[file]]\n"),
+    ("Obsidian Embed Params", "![[image.png|400]]\n", "![[image.png|400]]\n"),
+    ("Obsidian Embed Inline", "Content ![[inbox.base]] here.\n", "Content ![[inbox.base]] here.\n"),
+    (
+        "Callout with Embed",
+        "> [!info]+\n> Inbox Items ![[inbox.base]]\n",
+        "> [!info]+\n> Inbox Items ![[inbox.base]]\n",
+    ),
+    (
+        "Callout with Wikilink",
+        "> [!tip]\n> Check [[related page]] for details.\n",
+        "> [!tip]\n> Check [[related page]] for details.\n",
+    ),
 ]
 
 

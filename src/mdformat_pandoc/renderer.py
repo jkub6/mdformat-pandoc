@@ -31,8 +31,10 @@ from mdformat_pandoc.features.math import (
     render_math_block,
     render_math_inline,
 )
+from mdformat_pandoc.features.obsidian_embeds import render_obsidian_embed
 from mdformat_pandoc.features.sub_sup import render_sub, render_sup
 from mdformat_pandoc.features.tables import render_cell, render_table
+from mdformat_pandoc.features.wikilinks import render_wikilink
 from mdformat_pandoc.utils import PANDOC_DIV
 
 
@@ -65,4 +67,6 @@ RENDERERS: dict[str, Render] = {
     "s": render_strikethrough,
     "custom_label_list": custom_labels.render_custom_label_list,
     "custom_label_item": custom_labels.render_custom_label_item,
+    "wikilink": render_wikilink,
+    "obsidian_embed": render_obsidian_embed,
 }

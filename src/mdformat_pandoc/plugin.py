@@ -8,7 +8,9 @@ from mdit_py_plugins.front_matter import front_matter_plugin
 from mdformat_pandoc.features.custom_labels import custom_label_plugin
 from mdformat_pandoc.features.divs import PANDOC_DIV, pandoc_div_plugin
 from mdformat_pandoc.features.fancy_lists import fancy_lists_plugin
+from mdformat_pandoc.features.obsidian_embeds import obsidian_embed_plugin
 from mdformat_pandoc.features.sub_sup import subscript_plugin, superscript_plugin
+from mdformat_pandoc.features.wikilinks import wikilink_plugin
 
 
 def update_mdit(mdit: MarkdownIt) -> None:
@@ -20,6 +22,8 @@ def update_mdit(mdit: MarkdownIt) -> None:
     # Custom plugins
     mdit.block.ruler.before("fence", PANDOC_DIV, pandoc_div_plugin)
     mdit.use(fancy_lists_plugin)
+    mdit.use(obsidian_embed_plugin)  # Must be before image rule
+    mdit.use(wikilink_plugin)  # Must be before link rule
     mdit.use(superscript_plugin)
 
     # External plugins matching Pandoc syntax

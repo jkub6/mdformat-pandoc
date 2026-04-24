@@ -30,7 +30,7 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 # Skip the custom_labels directory for pandoc parity tests since
 # custom labels are a non-standard extension that pandoc doesn't
 # natively understand.
-SKIP_PARITY_DIRS = {"custom_labels"}
+SKIP_PARITY_DIRS = {"custom_labels", "obsidian"}
 
 
 def _collect_fixtures(
@@ -72,6 +72,7 @@ def _collect_fixtures(
 ALL_FIXTURES = _collect_fixtures()
 PARITY_FIXTURES = _collect_fixtures(skip_parity=True)
 CUSTOM_LABEL_FIXTURES = _collect_fixtures("custom_labels")
+OBSIDIAN_FIXTURES = _collect_fixtures("obsidian")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -138,6 +139,25 @@ class TestCustomLabels:
 
     @pytest.mark.parametrize(
         ("test_id", "md"), CUSTOM_LABEL_FIXTURES, ids=[f[0] for f in CUSTOM_LABEL_FIXTURES]
+    )
+    def test_idempotent_wrap80(self, test_id: str, md: str) -> None:
+        assert_idempotent(md, wrap=80)
+
+
+class TestObsidian:
+    """Obsidian syntax (wikilinks, embeds, callouts) is non-standard.
+
+    Pandoc doesn't understand these, so we only test idempotency.
+    """
+
+    @pytest.mark.parametrize(
+        ("test_id", "md"), OBSIDIAN_FIXTURES, ids=[f[0] for f in OBSIDIAN_FIXTURES]
+    )
+    def test_idempotent(self, test_id: str, md: str) -> None:
+        assert_idempotent(md)
+
+    @pytest.mark.parametrize(
+        ("test_id", "md"), OBSIDIAN_FIXTURES, ids=[f[0] for f in OBSIDIAN_FIXTURES]
     )
     def test_idempotent_wrap80(self, test_id: str, md: str) -> None:
         assert_idempotent(md, wrap=80)
