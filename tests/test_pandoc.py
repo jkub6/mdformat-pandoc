@@ -53,6 +53,16 @@ TEST_CASES = [
         "> [!tip]\n> Check [[related page]] for details.\n",
         "> [!tip]\n> Check [[related page]] for details.\n",
     ),
+    (
+        "Escaped Dollar",
+        "This costs \\$100.\n",
+        "This costs \\$100.\n",
+    ),
+    (
+        "Escaped Dollar Pair",
+        "This costs \\$100 and that costs \\$200 in total.\n",
+        "This costs \\$100 and that costs \\$200 in total.\n",
+    ),
 ]
 
 WRAP_TEST_CASES = [
