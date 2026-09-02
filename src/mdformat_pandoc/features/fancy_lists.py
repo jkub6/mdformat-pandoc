@@ -85,7 +85,7 @@ def parse_fancy_marker(state: StateBlock, start_line: int) -> FancyMarkerInfo | 
         "value": numeric_val,
         "spaces": spaces,
         "markup": markup,
-        "pos_after": pos + match.end(),
+        "pos_after": pos + match.start("spaces"),
     }
 
 
@@ -93,6 +93,13 @@ def skip_fancy_ordered_list_marker(state: StateBlock, start_line: int) -> int:
     """Helper for the monkeypatch to skip our fancy marker."""
     info = parse_fancy_marker(state, start_line)
     if info:
+        # If we are interrupting a paragraph (silent mode and sCount >= blkIndent),
+        # only standard lists (1., 1)) are allowed.
+        # Fancy lists like (1), a., etc. should not interrupt paragraphs.
+        if getattr(state, "_is_silent", False) and state.sCount[start_line] >= state.blkIndent:
+            if info["delim"] == "parens" or info["style"] not in ("arabic", "example"):
+                return -1
+
         # Cache the info for the current item so patched_push can find it
         state._last_fancy = info  # type: ignore[attr-defined]
         return int(info["pos_after"])
@@ -104,8 +111,18 @@ def patched_int(val: object, base: int = 10) -> int:
     try:
         if isinstance(val, int):
             return val
-        if isinstance(val, str) and not val.isdigit():
-            return 1
+        if isinstance(val, str):
+            val_str = val.strip("()@.")
+            if val_str.isdigit():
+                return int(val_str)
+            elif len(val_str) == 1 and val_str.isalpha():
+                if val_str.lower() == "i":
+                    return 1
+                return ord(val_str.lower()) - ord("a") + 1
+            elif val_str == "#":
+                return 1
+            elif re.match(r"^[ivxlcmIVXLCM]+$", val_str):
+                return 1 if val_str.lower() == "i" else 2
         return int(str(val), base)
     except (ValueError, TypeError):
         return 1
@@ -139,9 +156,6 @@ def fancy_lists_rule(state: StateBlock, start_line: int, end_line: int, silent: 
     if silent:
         return True
 
-    # Ensure patches are applied
-    apply_global_patches()
-
     original_push = state.push
 
     def patched_push(ttype: str, tag: str, level: int) -> Token:
@@ -174,5 +188,6 @@ def fancy_lists_rule(state: StateBlock, start_line: int, end_line: int, silent: 
 
 def fancy_lists_plugin(md: MarkdownIt) -> None:
     """A markdown-it-py plugin that adds support for Pandoc fancy lists."""
+    apply_global_patches()
     # Register our rule before the standard list rule
     md.block.ruler.before("list", "fancy_list", fancy_lists_rule)

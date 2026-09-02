@@ -26,6 +26,20 @@ def update_mdit(mdit: MarkdownIt) -> None:
     mdit.use(wikilink_plugin)  # Must be before link rule
     mdit.use(superscript_plugin)
 
+    # Wrap the standard list rule to track silent mode for monkeypatches
+    for i, rule in enumerate(mdit.block.ruler.__rules__):
+        if rule.name == "list":
+            def make_wrapper(orig):
+                def wrapped_list(state, startLine, endLine, silent):
+                    state._is_silent = silent
+                    try:
+                        return orig(state, startLine, endLine, silent)
+                    finally:
+                        if hasattr(state, "_is_silent"):
+                            del state._is_silent
+                return wrapped_list
+            rule.fn = make_wrapper(rule.fn)
+
     # External plugins matching Pandoc syntax
     mdit.use(footnote_plugin)
     mdit.use(deflist_plugin)
