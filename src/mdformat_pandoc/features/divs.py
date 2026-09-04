@@ -172,7 +172,7 @@ def _count_nested_divs(node: RenderTreeNode) -> int:
 def render_pandoc_div(node: RenderTreeNode, context: RenderContext) -> str:
     """Render a pandoc div fence with content."""
     attrs = parse_attributes(node.info) if node.info else {"id": "", "classes": []}
-    attr_str = format_attributes(attrs)
+    attr_str = format_attributes(attrs)  # type: ignore[arg-type]
 
     inner_depth = _count_nested_divs(node)
     min_fixed_colons = 3

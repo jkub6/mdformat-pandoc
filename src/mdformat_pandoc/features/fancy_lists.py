@@ -96,9 +96,12 @@ def skip_fancy_ordered_list_marker(state: StateBlock, start_line: int) -> int:
         # If we are interrupting a paragraph (silent mode and sCount >= blkIndent),
         # only standard lists (1., 1)) are allowed.
         # Fancy lists like (1), a., etc. should not interrupt paragraphs.
-        if getattr(state, "_is_silent", False) and state.sCount[start_line] >= state.blkIndent:
-            if info["delim"] == "parens" or info["style"] not in ("arabic", "example"):
-                return -1
+        is_interrupting = (
+            getattr(state, "_is_silent", False) and state.sCount[start_line] >= state.blkIndent
+        )
+        is_non_standard = info["delim"] == "parens" or info["style"] not in ("arabic", "example")
+        if is_interrupting and is_non_standard:
+            return -1
 
         # Cache the info for the current item so patched_push can find it
         state._last_fancy = info  # type: ignore[attr-defined]
@@ -115,13 +118,9 @@ def patched_int(val: object, base: int = 10) -> int:
             val_str = val.strip("()@.")
             if val_str.isdigit():
                 return int(val_str)
-            elif len(val_str) == 1 and val_str.isalpha():
-                if val_str.lower() == "i":
-                    return 1
-                return ord(val_str.lower()) - ord("a") + 1
-            elif val_str == "#":
-                return 1
-            elif re.match(r"^[ivxlcmIVXLCM]+$", val_str):
+            if val_str == "#" or (len(val_str) == 1 and val_str.isalpha()):
+                return 1 if val_str.lower() in ("i", "#") else (ord(val_str.lower()) - ord("a") + 1)
+            if re.match(r"^[ivxlcmIVXLCM]+$", val_str):
                 return 1 if val_str.lower() == "i" else 2
         return int(str(val), base)
     except (ValueError, TypeError):

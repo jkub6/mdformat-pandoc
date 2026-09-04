@@ -1,4 +1,7 @@
+from collections.abc import Callable
+
 from markdown_it import MarkdownIt
+from markdown_it.rules_block.state_block import StateBlock
 from markdown_it.rules_inline import StateInline
 from mdit_py_plugins.deflist import deflist_plugin
 from mdit_py_plugins.dollarmath import dollarmath_plugin
@@ -11,6 +14,8 @@ from mdformat_pandoc.features.fancy_lists import fancy_lists_plugin
 from mdformat_pandoc.features.obsidian_embeds import obsidian_embed_plugin
 from mdformat_pandoc.features.sub_sup import subscript_plugin, superscript_plugin
 from mdformat_pandoc.features.wikilinks import wikilink_plugin
+
+RuleFunc = Callable[[StateBlock, int, int, bool], bool]
 
 
 def update_mdit(mdit: MarkdownIt) -> None:
@@ -27,17 +32,25 @@ def update_mdit(mdit: MarkdownIt) -> None:
     mdit.use(superscript_plugin)
 
     # Wrap the standard list rule to track silent mode for monkeypatches
-    for i, rule in enumerate(mdit.block.ruler.__rules__):
+    for _i, rule in enumerate(mdit.block.ruler.__rules__):
         if rule.name == "list":
-            def make_wrapper(orig):
-                def wrapped_list(state, startLine, endLine, silent):
-                    state._is_silent = silent
+
+            def make_wrapper(orig: RuleFunc) -> RuleFunc:
+                def wrapped_list(
+                    state: StateBlock,
+                    start_line: int,
+                    end_line: int,
+                    silent: bool,  # noqa: FBT001
+                ) -> bool:
+                    state._is_silent = silent  # type: ignore[attr-defined]
                     try:
-                        return orig(state, startLine, endLine, silent)
+                        return orig(state, start_line, end_line, silent)
                     finally:
                         if hasattr(state, "_is_silent"):
                             del state._is_silent
+
                 return wrapped_list
+
             rule.fn = make_wrapper(rule.fn)
 
     # External plugins matching Pandoc syntax

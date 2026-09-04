@@ -7,15 +7,8 @@ define a postprocessor for the same node type and all will execute.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:
-    from mdformat.renderer import RenderContext, RenderTreeNode
-
-
-def _postprocess_escape_dollar(
-    text: str, node: RenderTreeNode, context: Any
-) -> str:
+def _postprocess_escape_dollar(text: str, _node: object, _context: object) -> str:
     """Escape literal dollar signs so the dollarmath plugin won't
     misinterpret them as inline math delimiters on re-parse.
 
