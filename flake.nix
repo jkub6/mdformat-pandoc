@@ -11,7 +11,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    treefmt-nix-config.url = "git+ssh://git@github.com/jkub6/treefmt-nix-config";
+    treefmt-nix-config.url = "github:jkub6/treefmt-nix-config";
   };
 
   outputs = inputs @ {flake-parts, ...}:
