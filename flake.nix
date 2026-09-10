@@ -99,6 +99,8 @@
             # Access the dynamically generated wrapper
             config.treefmt.build.wrapper
 
+            statix
+
             (python.withPackages (p:
               with p; [
                 mdformat-pandoc
