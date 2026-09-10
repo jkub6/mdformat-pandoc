@@ -198,7 +198,17 @@ def render_list_item(node: RenderTreeNode, context: RenderContext) -> str:
 
 def render_dl_open(node: RenderTreeNode, context: RenderContext) -> str:
     """Render definition list. Join children with newlines."""
-    return "\n\n".join(child.render(context) for child in node.children)
+    is_loose = False
+    for item in node.children:
+        for child in item.children:
+            if child.type == "paragraph" and not getattr(child, "hidden", False):
+                is_loose = True
+                break
+        if is_loose:
+            break
+
+    sep = "\n\n" if is_loose else "\n"
+    return sep.join(child.render(context) for child in node.children)
 
 
 def render_dt_open(node: RenderTreeNode, context: RenderContext) -> str:
