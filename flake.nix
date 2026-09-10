@@ -100,6 +100,7 @@
             config.treefmt.build.wrapper
 
             statix
+            typos
 
             (python.withPackages (p:
               with p; [
