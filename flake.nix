@@ -17,7 +17,7 @@
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
       # 1. Define standard systems (including Mac)
-      systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
+      systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin"];
 
       # 2. Import the treefmt module globally for this flake
       imports = [
