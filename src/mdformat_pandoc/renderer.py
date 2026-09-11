@@ -21,6 +21,7 @@ from mdformat_pandoc.features.footnotes import (
     render_footnote_ref,
 )
 from mdformat_pandoc.features.frontmatter import render_front_matter
+from mdformat_pandoc.features.line_blocks import render_line_block
 from mdformat_pandoc.features.lists import (
     render_dd_open,
     render_dl_open,
@@ -53,6 +54,7 @@ RENDERERS: dict[str, Render] = {
     "footnote_block": render_footnote_block_open,
     "footnote": render_footnote_open,
     "footnote_anchor": render_footnote_anchor,
+    "line_block": render_line_block,
     "dl": render_dl_open,
     "dt": render_dt_open,
     "dd": render_dd_open,

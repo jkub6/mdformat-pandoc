@@ -15,6 +15,11 @@ TEST_CASES = [
     ("Inline Footnote", "test ^[inline footnote]\n", "test ^[inline footnote]\n"),
     ("Bullet List", "- a\n- b\n", "- a\n- b\n"),
     (
+        "Line Block",
+        "| This is a line block\n| With multiple lines\n|  And a continuation\n",
+        "| This is a line block\n| With multiple lines\n|  And a continuation\n",
+    ),
+    (
         "Tight DefList Multiple Terms",
         "Term 1\n:   Def 1\n\nTerm 2\n:   Def 2\n",
         "Term 1\n:   Def 1\n\nTerm 2\n:   Def 2\n",
@@ -100,6 +105,11 @@ WRAP_TEST_CASES = [
         "Normal Blockquote Wrap Unchanged",
         "> This is a normal blockquote.\n",
         "> This is a normal blockquote.\n",
+    ),
+    (
+        "Line Block No Wrap",
+        "| This is a very very very very very very very very very very very very very long line block\n| And it should not be wrapped at all even if wrap is eighty\n",
+        "| This is a very very very very very very very very very very very very very long line block\n| And it should not be wrapped at all even if wrap is eighty\n",
     ),
 ]
 

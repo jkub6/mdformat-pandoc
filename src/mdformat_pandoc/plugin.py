@@ -11,6 +11,7 @@ from mdit_py_plugins.front_matter import front_matter_plugin
 from mdformat_pandoc.features.custom_labels import custom_label_plugin
 from mdformat_pandoc.features.divs import PANDOC_DIV, pandoc_div_plugin
 from mdformat_pandoc.features.fancy_lists import fancy_lists_plugin
+from mdformat_pandoc.features.line_blocks import pandoc_line_block_plugin
 from mdformat_pandoc.features.obsidian_embeds import obsidian_embed_plugin
 from mdformat_pandoc.features.sub_sup import subscript_plugin, superscript_plugin
 from mdformat_pandoc.features.wikilinks import wikilink_plugin
@@ -54,6 +55,7 @@ def update_mdit(mdit: MarkdownIt) -> None:
             rule.fn = make_wrapper(rule.fn)
 
     # External plugins matching Pandoc syntax
+    mdit.use(pandoc_line_block_plugin)
     mdit.use(footnote_plugin)
     mdit.use(deflist_plugin)
     mdit.use(front_matter_plugin)
