@@ -87,6 +87,9 @@
         # 5. treefmt works magically via the module system now
         treefmt = {
           imports = [inputs.treefmt-nix-config.treefmtModule];
+          settings.formatter.mdformat.command = pkgs.lib.mkForce "${pkgs.lib.getExe (localPkgs.mdformat.withPlugins (p: [
+            localPkgs.python3Packages.mdformat-pandoc
+          ]))}";
         };
 
         # Export the development shell
