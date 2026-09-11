@@ -207,8 +207,19 @@ def render_dl_open(node: RenderTreeNode, context: RenderContext) -> str:
         if is_loose:
             break
 
-    sep = "\n\n" if is_loose else "\n"
-    return sep.join(child.render(context) for child in node.children)
+    if is_loose:
+        return "\n\n".join(child.render(context) for child in node.children)
+
+    result = []
+    for i, child in enumerate(node.children):
+        rendered = child.render(context)
+        if i > 0 and child.type == "dt":
+            result.append("\n\n" + rendered)
+        elif i > 0:
+            result.append("\n" + rendered)
+        else:
+            result.append(rendered)
+    return "".join(result)
 
 
 def render_dt_open(node: RenderTreeNode, context: RenderContext) -> str:

@@ -14,6 +14,11 @@ TEST_CASES = [
     ("Footnote Block", "test[^1]\n\n[^1]: \n    note\n", "test[^1]\n\n[^1]: \n    note\n"),
     ("Inline Footnote", "test ^[inline footnote]\n", "test ^[inline footnote]\n"),
     ("Bullet List", "- a\n- b\n", "- a\n- b\n"),
+    (
+        "Tight DefList Multiple Terms",
+        "Term 1\n:   Def 1\n\nTerm 2\n:   Def 2\n",
+        "Term 1\n:   Def 1\n\nTerm 2\n:   Def 2\n",
+    ),
     ("Subscript with Space", "test ~sub\\ script~ here\n", "test ~sub\\ script~ here\n"),
     ("Superscript with Space", "test ^super\\ script^ here\n", "test ^super\\ script^ here\n"),
     ("Nested Sub/Sup", "test ~sub^sup^~ here\n", "test ~sub^sup^~ here\n"),
