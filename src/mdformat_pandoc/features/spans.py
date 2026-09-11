@@ -107,76 +107,79 @@ def _find_closing_bracket(state: StateInline, open_pos: int) -> int | None:
     return None
 
 
+def _parse_inner(state: StateInline, start: int, close_pos: int) -> None:
+    """Parse bracket-enclosed content as inline markdown."""
+    old_max = state.posMax
+    state.pos = start + 1
+    state.posMax = close_pos
+    state.md.inline.tokenize(state)
+    state.posMax = old_max
+
+
+def _try_span(
+    state: StateInline,
+    start: int,
+    close_pos: int,
+    *,
+    silent: bool,
+) -> bool:
+    """Try to match ``[content]{attrs}``."""
+    after_close = close_pos + 1
+    attr_block = _try_match_attr_block(state.src, after_close)
+    if attr_block is None:
+        return False
+    if not silent:
+        token_open = state.push("pandoc_span_open", "span", 1)
+        token_open.markup = "["
+        token_open.meta = {"attrs": attr_block}
+        _parse_inner(state, start, close_pos)
+        token_close = state.push("pandoc_span_close", "span", -1)
+        token_close.markup = "]"
+        state.pos = after_close + len(attr_block)
+    return True
+
+
+def _try_citation(
+    state: StateInline,
+    start: int,
+    close_pos: int,
+    *,
+    silent: bool,
+) -> bool:
+    """Try to match ``[…@key…]``."""
+    inner_text = state.src[start + 1 : close_pos]
+    if not _has_citation_key(inner_text):
+        return False
+    # Don't consume brackets that belong to a regular or ref link.
+    after_close = close_pos + 1
+    next_char = state.src[after_close] if after_close < len(state.src) else ""
+    if next_char in ("(", "["):
+        return False
+    if not silent:
+        token_open = state.push("pandoc_citation_open", "", 1)
+        token_open.markup = "["
+        _parse_inner(state, start, close_pos)
+        token_close = state.push("pandoc_citation_close", "", -1)
+        token_close.markup = "]"
+        state.pos = after_close
+    return True
+
+
 def _pandoc_span_tokenize(state: StateInline, silent: bool) -> bool:  # noqa: FBT001
     """Tokenize ``[content]{attrs}`` spans and ``[@citekey …]`` citations."""
     start = state.pos
-    maximum = state.posMax
 
     if state.src[start] != "[":
         return False
 
-    # Find matching ]
     close_pos = _find_closing_bracket(state, start)
     if close_pos is None:
         return False
 
-    inner_text = state.src[start + 1 : close_pos]
-    after_close = close_pos + 1
-
-    # ── Case 1: Pandoc span — ``[content]{attrs}`` ───────────────
-    attr_block = _try_match_attr_block(state.src, after_close)
-    if attr_block is not None:
-        if silent:
-            return True
-
-        # Emit open token with the attribute string stored in meta
-        token_open = state.push("pandoc_span_open", "span", 1)
-        token_open.markup = "["
-        token_open.meta = {"attrs": attr_block}
-
-        # Parse inner content as inline markdown
-        old_max = state.posMax
-        state.pos = start + 1
-        state.posMax = close_pos
-        state.md.inline.tokenize(state)
-        state.posMax = old_max
-
-        # Emit close token
-        token_close = state.push("pandoc_span_close", "span", -1)
-        token_close.markup = "]"
-
-        # Advance past ] and the {attrs} block
-        state.pos = after_close + len(attr_block)
+    if _try_span(state, start, close_pos, silent=silent):
         return True
 
-    # ── Case 2: Pandoc citation — ``[…@key…]`` ──────────────────
-    if _has_citation_key(inner_text):
-        # Check that this isn't a regular link: ``[text](url)``
-        # or a ref link ``[text][ref]`` — those should be handled
-        # by the standard link parser.
-        next_char = state.src[after_close] if after_close < len(state.src) else ""
-        if next_char in ("(", "["):
-            return False
-
-        if silent:
-            return True
-
-        token_open = state.push("pandoc_citation_open", "", 1)
-        token_open.markup = "["
-
-        old_max = state.posMax
-        state.pos = start + 1
-        state.posMax = close_pos
-        state.md.inline.tokenize(state)
-        state.posMax = old_max
-
-        token_close = state.push("pandoc_citation_close", "", -1)
-        token_close.markup = "]"
-
-        state.pos = close_pos + 1
-        return True
-
-    return False
+    return _try_citation(state, start, close_pos, silent=silent)
 
 
 # ═══════════════════════════════════════════════════════════════════
