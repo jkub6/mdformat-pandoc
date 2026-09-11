@@ -11,7 +11,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    treefmt-nix-config.url = "github:jkub6/treefmt-nix-config";
+    treefmt-nix-config = {
+      url = "github:jkub6/treefmt-nix-config";
+      inputs.mdformat-pandoc.follows = "/";
+    };
   };
 
   outputs = inputs @ {flake-parts, ...}:
@@ -87,9 +90,6 @@
         # 5. treefmt works magically via the module system now
         treefmt = {
           imports = [inputs.treefmt-nix-config.treefmtModule];
-          settings.formatter.mdformat.command = pkgs.lib.mkForce "${pkgs.lib.getExe (localPkgs.mdformat.withPlugins (p: [
-            localPkgs.python3Packages.mdformat-pandoc
-          ]))}";
         };
 
         # Export the development shell
