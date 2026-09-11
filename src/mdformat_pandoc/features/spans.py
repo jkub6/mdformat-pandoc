@@ -135,7 +135,7 @@ def _try_span(
         _parse_inner(state, start, close_pos)
         token_close = state.push("pandoc_span_close", "span", -1)
         token_close.markup = "]"
-        state.pos = after_close + len(attr_block)
+    state.pos = after_close + len(attr_block)
     return True
 
 
@@ -161,7 +161,7 @@ def _try_citation(
         _parse_inner(state, start, close_pos)
         token_close = state.push("pandoc_citation_close", "", -1)
         token_close.markup = "]"
-        state.pos = after_close
+    state.pos = after_close
     return True
 
 
