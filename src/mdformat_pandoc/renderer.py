@@ -34,6 +34,7 @@ from mdformat_pandoc.features.math import (
     render_math_inline,
 )
 from mdformat_pandoc.features.obsidian_embeds import render_obsidian_embed
+from mdformat_pandoc.features.spans import render_pandoc_citation, render_pandoc_span
 from mdformat_pandoc.features.sub_sup import render_sub, render_sup
 from mdformat_pandoc.features.tables import render_cell, render_table
 from mdformat_pandoc.features.wikilinks import render_wikilink
@@ -73,4 +74,6 @@ RENDERERS: dict[str, Render] = {
     "wikilink": render_wikilink,
     "obsidian_embed": render_obsidian_embed,
     "blockquote": render_blockquote,
+    "pandoc_span": render_pandoc_span,
+    "pandoc_citation": render_pandoc_citation,
 }

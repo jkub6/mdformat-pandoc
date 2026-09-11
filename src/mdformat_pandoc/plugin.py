@@ -13,6 +13,7 @@ from mdformat_pandoc.features.divs import PANDOC_DIV, pandoc_div_plugin
 from mdformat_pandoc.features.fancy_lists import fancy_lists_plugin
 from mdformat_pandoc.features.line_blocks import pandoc_line_block_plugin
 from mdformat_pandoc.features.obsidian_embeds import obsidian_embed_plugin
+from mdformat_pandoc.features.spans import pandoc_span_plugin
 from mdformat_pandoc.features.sub_sup import subscript_plugin, superscript_plugin
 from mdformat_pandoc.features.wikilinks import wikilink_plugin
 
@@ -30,6 +31,7 @@ def update_mdit(mdit: MarkdownIt) -> None:
     mdit.use(fancy_lists_plugin)
     mdit.use(obsidian_embed_plugin)  # Must be before image rule
     mdit.use(wikilink_plugin)  # Must be before link rule
+    mdit.use(pandoc_span_plugin)  # Must be before link rule (spans & citations)
     mdit.use(superscript_plugin)
 
     # Wrap the standard list rule to track silent mode for monkeypatches

@@ -73,6 +73,41 @@ TEST_CASES = [
         "This costs \\$100 and that costs \\$200 in total.\n",
         "This costs \\$100 and that costs \\$200 in total.\n",
     ),
+    (
+        "Span Simple",
+        "[highlight]{.mark}\n",
+        "[highlight]{.mark}\n",
+    ),
+    (
+        "Span With Emphasis",
+        '[This is *some text*]{.class key="val"}\n',
+        '[This is *some text*]{.class key="val"}\n',
+    ),
+    (
+        "Span Empty Content",
+        "[]{#my-anchor}\n",
+        "[]{#my-anchor}\n",
+    ),
+    (
+        "Span Empty Attrs",
+        "[text]{}\n",
+        "[text]{}\n",
+    ),
+    (
+        "Citation With Emphasis",
+        "Blah blah [see @Foo, pp. 33-35 and *passim*; @Bar, chap. 1].\n",
+        "Blah blah [see @Foo, pp. 33-35 and *passim*; @Bar, chap. 1].\n",
+    ),
+    (
+        "Citation Simple",
+        "test [@foo]\n",
+        "test [@foo]\n",
+    ),
+    (
+        "Citation Suppressed Author",
+        "Smith says blah [-@smith04].\n",
+        "Smith says blah [-@smith04].\n",
+    ),
 ]
 
 WRAP_TEST_CASES = [
