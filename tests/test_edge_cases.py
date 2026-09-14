@@ -57,6 +57,15 @@ class TestImageEdgeCases:
         md = "![alt](image.png)\\\n"
         assert_pandoc_parity(md)
 
+    def test_image_with_unquoted_percent_attr(self) -> None:
+        md = "![alt](test_image.png){width=50%}\n"
+        assert_idempotent(md)
+
+    @PANDOC_SKIP
+    def test_image_with_unquoted_percent_attr_parity(self) -> None:
+        md = "![alt](test_image.png){width=50%}\n"
+        assert_pandoc_parity(md)
+
     def test_image_with_empty_alt(self) -> None:
         md = "![](image.png)\n"
         assert_idempotent(md)
@@ -599,6 +608,15 @@ class TestHeadingEdgeCases:
     def test_heading_multi_attrs(self) -> None:
         md = '### Third heading {#bar .class1 .class2 key="value"}\n'
         assert_idempotent(md)
+
+    def test_heading_with_filename_in_quotes(self) -> None:
+        md = '## Background Image {data-background-image="test_image.png"}\n'
+        assert_idempotent(md)
+
+    @PANDOC_SKIP
+    def test_heading_with_filename_in_quotes_parity(self) -> None:
+        md = '## Background Image {data-background-image="test_image.png"}\n'
+        assert_pandoc_parity(md)
 
 
 # ═══════════════════════════════════════════════════════════════════

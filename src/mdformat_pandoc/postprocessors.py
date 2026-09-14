@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from mdformat_pandoc.utils import ATTR_PATTERN, format_attributes, parse_attributes
+from mdformat_pandoc.utils import ATTR_PATTERN, format_attributes
 
 if TYPE_CHECKING:
     from mdformat.renderer import RenderContext, RenderTreeNode
@@ -30,7 +30,7 @@ def _postprocess_text(text: str, node: RenderTreeNode, _context: RenderContext) 
     if node.previous_sibling and node.previous_sibling.type in ("image", "link"):
         m = ATTR_PATTERN.match(res)
         if m:
-            formatted = format_attributes(parse_attributes(m.group(0)))
+            formatted = format_attributes(m.group(0))
             res = formatted + res[m.end() :]
 
     return res
@@ -42,7 +42,7 @@ def _postprocess_heading(text: str, _node: RenderTreeNode, _context: RenderConte
     if m:
         last_match = m[-1]
         if last_match.end() == len(text) or text[last_match.end() :].isspace():
-            formatted = format_attributes(parse_attributes(last_match.group(0)))
+            formatted = format_attributes(last_match.group(0))
             text = text[: last_match.start()] + formatted + text[last_match.end() :]
 
     return text
@@ -56,7 +56,7 @@ def _postprocess_fence(text: str, _node: RenderTreeNode, _context: RenderContext
         # Only replace if it's on the first line (the info string)
         first_newline = text.find("\n")
         if first_newline == -1 or m.start() < first_newline:
-            formatted = format_attributes(parse_attributes(m.group(0)))
+            formatted = format_attributes(m.group(0))
             text = text[: m.start()] + formatted + text[m.end() :]
 
     return text

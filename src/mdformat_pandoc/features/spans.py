@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from mdformat_pandoc.utils import format_attributes, parse_attributes
+from mdformat_pandoc.utils import format_attributes
 
 if TYPE_CHECKING:
     from markdown_it import MarkdownIt
@@ -194,12 +194,7 @@ def render_pandoc_span(node: RenderTreeNode, context: RenderContext) -> str:
     inner = "".join(child.render(context) for child in node.children)
     raw_attrs = str(node.meta.get("attrs", ""))
 
-    if raw_attrs:
-        attrs = format_attributes(parse_attributes(raw_attrs))
-        if not attrs:
-            attrs = "{}"
-    else:
-        attrs = ""
+    attrs = format_attributes(raw_attrs) if raw_attrs else ""
 
     return f"[{inner}]{attrs}"
 

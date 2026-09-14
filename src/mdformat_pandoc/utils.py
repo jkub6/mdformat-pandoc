@@ -12,7 +12,8 @@ ATTR_PATTERN = re.compile(
     r"(?:"
     r"(?:#[\w-]+)|"  # ID: #myid
     r"(?:\.[\w-]+)|"  # Class: .myclass
-    r"(?:[\w-]+=(?:\"[^\"]*\"|'[^']*'|[\w-]+))"  # Key-value: key="val" or key=val
+    r"(?:[\w-]+=(?:\"(?:[^\"\\]|\\.)*\"|'(?:[^\'\\]|\\.)*'|[^\s\"'{}=]+))|"  # Key-value
+    r"(?:-)"  # Flag like -
     r")"
     r"[\s]*"
     r")+"
@@ -21,6 +22,20 @@ ATTR_PATTERN = re.compile(
 
 # Simple unbraced class name (e.g., ::: warning)
 SIMPLE_CLASS_PATTERN = re.compile(r"^([\w-]+)(?:\s*:*)*$")
+
+_ATTR_TOKEN_RE = re.compile(
+    r"(?P<id>#[\w-]+)|"
+    r"(?P<class>\.[\w-]+)|"
+    r"(?P<key_val>[\w-]+=(?:\"(?:[^\"\\]|\\.)*\"|'(?:[^\'\\]|\\.)*'|[^\s\"'{}=]+))|"
+    r"(?P<flag>-)"
+)
+
+
+def _parse_kv(kv_str: str) -> tuple[str, str]:
+    key, val = kv_str.split("=", 1)
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        val = val[1:-1].replace('\\"', '"').replace("\\'", "'")
+    return key, val
 
 
 def parse_attributes(attr_string: str) -> dict[str, str | list[str]]:
@@ -48,35 +63,64 @@ def parse_attributes(attr_string: str) -> dict[str, str | list[str]]:
     if attr_string.startswith("{") and attr_string.endswith("}"):
         attr_string = attr_string[1:-1].strip()
 
-    # Parse individual attributes
-    # ID: #identifier
-    for match in re.finditer(r"#([\w-]+)", attr_string):
-        result["id"] = match.group(1)
-
-    # Classes: .classname
-    classes: list[str] = [match.group(1) for match in re.finditer(r"\.([\w-]+)", attr_string)]
+    # Parse individual attributes token-by-token
+    classes: list[str] = []
     result["classes"] = classes
-
-    # Key-value pairs: key="value" or key='value' or key=value
-    for match in re.finditer(r"([\w-]+)=(?:\"([^\"]*)\"|'([^']*)'|([\w-]+))", attr_string):
-        key = match.group(1)
-        # Get whichever group matched
-        value = match.group(2) or match.group(3) or match.group(4) or ""
-        result[key] = value
+    for match in _ATTR_TOKEN_RE.finditer(attr_string):
+        if match.group("id"):
+            result["id"] = match.group("id")[1:]
+        elif match.group("class"):
+            classes.append(match.group("class")[1:])
+        elif match.group("key_val"):
+            key, val = _parse_kv(match.group("key_val"))
+            result[key] = val
+        elif match.group("flag"):
+            classes.append("-")
 
     return result
 
 
-def format_attributes(attrs: dict[str, str | list[str]]) -> str:
-    """Format parsed attributes back to pandoc syntax.
+def _token_sort_key(tok: str) -> int:
+    if tok.startswith("#"):
+        return 0
+    if tok.startswith("."):
+        return 1
+    return 2 if tok == "-" else 3
+
+
+def format_attribute_string(attr_string: str) -> str:
+    """Format an attribute string by stripping spaces and single-spacing tokens."""
+    attr_string = attr_string.strip()
+    if not attr_string:
+        return ""
+
+    if m := SIMPLE_CLASS_PATTERN.match(attr_string):
+        return f"{{.{m.group(1)}}}"
+
+    if attr_string.startswith("{") and attr_string.endswith("}"):
+        attr_string = attr_string[1:-1].strip()
+
+    tokens = [match.group(0) for match in _ATTR_TOKEN_RE.finditer(attr_string)]
+    if not tokens:
+        return "{}"
+
+    sorted_tokens = sorted(tokens, key=_token_sort_key)
+    return "{" + " ".join(sorted_tokens) + "}"
+
+
+def format_attributes(attrs: str | dict[str, str | list[str]]) -> str:
+    """Format attributes back to pandoc syntax.
 
     Args:
-        attrs: Parsed attribute dict from parse_attributes.
+        attrs: An attribute string or a parsed attribute dict.
 
     Returns:
         Formatted attribute string like {#id .class1 .class2 key="value"}
 
     """
+    if isinstance(attrs, str):
+        return format_attribute_string(attrs)
+
     parts: list[str] = []
 
     # ID first
@@ -86,15 +130,18 @@ def format_attributes(attrs: dict[str, str | list[str]]) -> str:
     # Classes
     classes = attrs.get("classes", [])
     if isinstance(classes, list):
-        parts.extend(f".{cls}" for cls in classes)
+        parts.extend(cls if cls == "-" else f".{cls}" for cls in classes)
 
     # Other key-value attributes
     for key, value in attrs.items():
         if key in ("id", "classes"):
             continue
         if isinstance(value, str):
-            escaped_value = value.replace('"', '\\"')
-            parts.append(f'{key}="{escaped_value}"')
+            if " " in value or '"' in value or "'" in value:
+                escaped_value = value.replace('"', '\\"')
+                parts.append(f'{key}="{escaped_value}"')
+            else:
+                parts.append(f"{key}={value}")
 
     if parts:
         return "{" + " ".join(parts) + "}"
