@@ -78,6 +78,39 @@
         # Apply our custom overlay to the local package set
         localPkgs = pkgs.extend inputs.self.overlays.default;
         python = localPkgs.python3;
+        pandoc-bin = pkgs.stdenv.mkDerivation rec {
+          pname = "pandoc-bin";
+          version = "3.11";
+
+          src = pkgs.fetchurl {
+            url = "https://github.com/jgm/pandoc/releases/download/${version}/pandoc-${version}-${
+              {
+                "x86_64-linux" = "linux-amd64.tar.gz";
+                "aarch64-linux" = "linux-arm64.tar.gz";
+              }.${
+                system
+              } or (throw "Unsupported system")
+            }";
+            hash =
+              {
+                "x86_64-linux" = "sha256-N+2zu89yL5IaAJlBv1h04uDAkmMibJtKLZgHiMsGKrY=";
+                "aarch64-linux" = "";
+              }.${
+                system
+              } or (throw "Unsupported system");
+          };
+
+          nativeBuildInputs = [pkgs.unzip pkgs.installShellFiles];
+
+          installPhase = ''
+            mkdir -p $out/bin
+            if [ -d bin ]; then
+              cp bin/pandoc $out/bin/
+            else
+              cp pandoc $out/bin/ || cp */bin/pandoc $out/bin/
+            fi
+          '';
+        };
       in {
         # Export the package
         packages.default = python.pkgs.mdformat-pandoc;
@@ -92,12 +125,13 @@
           imports = [inputs.treefmt-nix-config.treefmtModule];
         };
 
+
         # Export the development shell
         devShells.default = localPkgs.mkShell {
           inputsFrom = [python.pkgs.mdformat-pandoc];
           packages = with localPkgs; [
             just
-            pandoc
+            pandoc-bin
 
             # Access the dynamically generated wrapper
             config.treefmt.build.wrapper
