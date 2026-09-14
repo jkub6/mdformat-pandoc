@@ -125,7 +125,6 @@
           imports = [inputs.treefmt-nix-config.treefmtModule];
         };
 
-
         # Export the development shell
         devShells.default = localPkgs.mkShell {
           inputsFrom = [python.pkgs.mdformat-pandoc];

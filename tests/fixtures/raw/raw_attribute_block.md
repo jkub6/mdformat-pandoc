@@ -1,0 +1,4 @@
+```{=ms}
+.MYMACRO
+blah blah
+```

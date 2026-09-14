@@ -9,16 +9,18 @@ ATTR_PATTERN = re.compile(
     r"\{\s*"
     r"(?P<attrs>"
     r"(?:"
+    r"(?:"
     r"(?:#[\w-]+)|"  # ID: #myid
     r"(?:\.[\w-]+)|"  # Class: .myclass
     r"(?:[\w-]+=(?:\"[^\"]*\"|'[^']*'|[\w-]+))"  # Key-value: key="val" or key=val
+    r")"
     r"[\s]*"
     r")+"
     r")\s*\}"
 )
 
 # Simple unbraced class name (e.g., ::: warning)
-SIMPLE_CLASS_PATTERN = re.compile(r"^[\w-]+$")
+SIMPLE_CLASS_PATTERN = re.compile(r"^([\w-]+)(?:\s*:*)*$")
 
 
 def parse_attributes(attr_string: str) -> dict[str, str | list[str]]:
@@ -38,8 +40,8 @@ def parse_attributes(attr_string: str) -> dict[str, str | list[str]]:
     attr_string = attr_string.strip()
 
     # Handle simple unbraced class name
-    if SIMPLE_CLASS_PATTERN.match(attr_string):
-        result["classes"] = [attr_string]
+    if m := SIMPLE_CLASS_PATTERN.match(attr_string):
+        result["classes"] = [m.group(1)]
         return result
 
     # Handle full brace syntax - strip braces

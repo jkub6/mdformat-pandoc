@@ -31,7 +31,7 @@ check:
 	vulture
 	statix check .
 	typos --config .typos.toml .
-	nix flake check --all-systems .  # This will check formatting too
+	nix flake check .  # This will check formatting too
 
 [group('Quality')]
 [doc('Run all tests')]

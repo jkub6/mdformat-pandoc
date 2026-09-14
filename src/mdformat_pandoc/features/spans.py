@@ -23,6 +23,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from mdformat_pandoc.utils import format_attributes, parse_attributes
+
 if TYPE_CHECKING:
     from markdown_it import MarkdownIt
     from markdown_it.rules_inline import StateInline
@@ -190,7 +192,15 @@ def _pandoc_span_tokenize(state: StateInline, silent: bool) -> bool:  # noqa: FB
 def render_pandoc_span(node: RenderTreeNode, context: RenderContext) -> str:
     """Render ``[inline content]{attrs}``."""
     inner = "".join(child.render(context) for child in node.children)
-    attrs = str(node.meta.get("attrs", "{}"))
+    raw_attrs = str(node.meta.get("attrs", ""))
+
+    if raw_attrs:
+        attrs = format_attributes(parse_attributes(raw_attrs))
+        if not attrs:
+            attrs = "{}"
+    else:
+        attrs = ""
+
     return f"[{inner}]{attrs}"
 
 

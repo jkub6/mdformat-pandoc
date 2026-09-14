@@ -1,0 +1,6 @@
+$$
+\begin{aligned}
+x &= y \\\\
+z &= w
+\end{aligned}
+$$
