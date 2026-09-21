@@ -1,1 +1,4 @@
-Text^[This has *emphasis* and `code`].
+Text[^1].
+
+[^1]: 
+    This has *emphasis* and `code`
