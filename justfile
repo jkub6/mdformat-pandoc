@@ -6,59 +6,59 @@ set dotenv-load
 
 [doc('List available recipes')]
 default:
-	@just --list
+    @just --list
 
 # =============================================================================
 # Quality
 # =============================================================================
 
-[group('Quality')]
 [doc('Apply automatic fixes (formatting and linting)')]
+[group('Quality')]
 fix: format
-  ruff check --fix-only .
-  statix fix .
+    ruff check --fix-only .
+    statix fix .
 
-[group('Quality')]
 [doc('Format code')]
+[group('Quality')]
 format:
-  nix fmt
+    nix fmt
 
-[group('Quality')]
 [doc('Run all static analysis checks')]
+[group('Quality')]
 check:
-	ruff check .
-	mypy
-	vulture
-	statix check .
-	typos --config .typos.toml .
-	nix flake check .  # This will check formatting too
+    ruff check .
+    mypy
+    vulture
+    statix check .
+    typos --config .typos.toml .
+    nix flake check .  # This will check formatting too
 
-[group('Quality')]
 [doc('Run all tests')]
-test:
-	pytest
-
 [group('Quality')]
+test:
+    pytest
+
 [doc('Run full CI pipeline: check, test, build')]
+[group('Quality')]
 ci: check test build
 
 # =============================================================================
 # Build
 # =============================================================================
 
-[group('Build')]
 [doc('Build the Nix package')]
+[group('Build')]
 build:
-	nix build
+    nix build
 
 # =============================================================================
 # Maintenance
 # =============================================================================
 
-[group('Maintenance')]
-[doc('Clean build artifacts and caches')]
 [confirm('This will delete all build artifacts and caches. Continue?')]
+[doc('Clean build artifacts and caches')]
+[group('Maintenance')]
 clean:
-	rm -rf .pytest_cache .ruff_cache .mypy_cache \
-	       .coverage coverage.xml htmlcov result
-	find . -type d -name "__pycache__" -exec rm -rf {} +
+    rm -rf .pytest_cache .ruff_cache .mypy_cache \
+           .coverage coverage.xml htmlcov result
+    find . -type d -name "__pycache__" -exec rm -rf {} +
